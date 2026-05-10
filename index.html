@@ -29,7 +29,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: #000;
+      background: #000000 !important;
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       overflow-x: hidden;
@@ -157,6 +157,113 @@
       text-transform: uppercase;
       font-weight: 1000;
       text-shadow: 0 0 18px var(--accent-soft, rgba(255,255,255,0.12));
+    }
+
+
+
+    .category-panel {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      box-shadow: none;
+      margin-top: 10px;
+    }
+
+    .category-panel .category-list {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 2px 2px 6px;
+      scrollbar-width: none;
+      justify-content: center;
+    }
+
+    .category-panel .category-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-panel .cat-card {
+      flex: 0 0 auto;
+      min-height: auto;
+      min-width: 132px;
+      padding: 12px 14px;
+    }
+
+    @media (max-width: 699px) {
+      .category-panel .category-list {
+        justify-content: flex-start;
+      }
+
+      .category-panel .cat-card {
+        min-width: 116px;
+        padding: 11px 12px;
+      }
+    }
+
+    .category-panel.compact {
+      padding: 0;
+    }
+
+    .category-panel.compact .panel-title,
+    .category-panel.compact .tiny {
+      display: none;
+    }
+
+    .category-panel.compact .category-list {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .category-panel.compact .category-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-panel.compact .cat-card {
+      min-width: auto;
+      min-height: auto;
+      flex: 0 0 auto;
+      padding: 10px 12px;
+      border-radius: 999px;
+    }
+
+    .category-panel.compact .cat-card:not(.selected) {
+      opacity: 0.52;
+    }
+
+    .category-panel.compact .cat-card .cat-name {
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .category-panel.compact .cat-card .count,
+    .category-panel.compact .cat-card .trend {
+      display: none;
+    }
+
+    .category-collapse-note {
+      display: none;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .category-panel.compact .category-collapse-note {
+      display: block;
+    }
+
+    @media (max-width: 699px) {
+      .category-list {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .cat-card {
+        min-height: 96px;
+      }
     }
 
     .category-list {
@@ -523,6 +630,8 @@
     }
 
     .hidden { display: none !important; }
+    .stage-hidden { display: none !important; }
+    #storyStatusPanel { display: none !important; }
 
     .tiny {
       color: var(--muted);
@@ -531,6 +640,45 @@
       margin-top: 8px;
     }
 
+
+
+    .row-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+      align-items: stretch;
+    }
+
+    @media (min-width: 920px) {
+      .row-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .row-grid > section,
+    .row-grid > div > section {
+      height: 100%;
+    }
+
+    .foundation-slot .foundation-panel {
+      display: none;
+      height: 100%;
+    }
+
+    .foundation-slot .foundation-panel.show {
+      display: block;
+    }
+
+    .directions-progression-row .panel {
+      min-height: 100%;
+    }
+
+    @media (min-width: 920px) {
+      .directions-progression-row #progression {
+        max-height: 520px !important;
+      }
+    }
 
     .dashboard-grid {
       display: grid;
@@ -755,6 +903,19 @@
       display: block;
     }
 
+
+    .char-counter {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .completed-hide {
+      display: none !important;
+    }
+
     .handle-input {
       width: 100%;
       border-radius: 18px;
@@ -966,21 +1127,7 @@
       font-weight: 900;
     }
 
-    .footer-link {
-      margin: 22px auto 0;
-      display: flex;
-      width: fit-content;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 14px;
-      color: var(--text);
-      text-decoration: none;
-      background: rgba(255,255,255,0.07);
-      font-weight: 900;
-    }
-  </style>
+    </style>
 </head>
 <body>
   <main class="app">
@@ -996,106 +1143,49 @@
 
     <div class="top-actions">
       <button class="nav-btn" id="homeBtn">DEVELOP</button>
-      <button class="nav-btn" id="archiveBtn">COMPLETED CATEGORIES</button>
-      <button class="nav-btn" id="resetBtn">RESET SELECTION</button>
+      <button class="nav-btn" id="archiveBtn">COMPLETED</button>
+      <button class="nav-btn" id="resetBtn">RESET</button>
     </div>
 
     <section id="homeView">
-      <div class="panel">
-        <h2 class="panel-title">Select a category</h2>
+      <div class="category-panel" id="categoryPanel">
         <div class="category-list" id="categoryList"></div>
-        <div class="tiny">Selection counts are local prototype values. In production, Supabase would store and update these globally.</div>
       </div>
 
-      <div class="dashboard-grid">
-        <div>
-          <section class="panel story-card">
-            <div class="category-badge" id="categoryBadge">SELECT A CATEGORY</div>
-            <div class="story-text" id="storyText">Choose what the crowd should develop first.</div>
-            <div class="instruction" id="instructionText">Each selection upvotes the chosen option and implicitly downvotes the other available options.</div>
-          </section>
+      <div class="row-grid progress-scene-row">
+        <section class="category-progress-card">
+          <div class="progress-status">
+            <div class="flag">⚑</div>
+            <div>
+              <div class="progress-headline" id="progressHeadline">CATEGORY WAITING</div>
+              <div class="progress-sub" id="progressSub">Select a category to begin.</div>
+            </div>
+          </div>
 
-          <section class="panel foundation-panel" id="foundationBox">
-            <div class="section-icon-title">
-              <span class="section-icon">✦</span>
-              <h2 class="panel-title" style="margin:0;">Submit a foundation</h2>
-            </div>
-            <div class="instruction" style="margin-top:10px;">Before exploring the trending path, add one possible beginning for this category. This simulates the community submitting new foundations into the same shedding system.</div>
-            <input class="handle-input" id="xHandleInput" maxlength="32" placeholder="Enter your X handle, e.g. @ideaordie" />
-            <textarea id="foundationInput" maxlength="170" placeholder="Submit a new foundation for this category..."></textarea>
-            <div class="foundation-actions">
-              <button class="primary" id="submitFoundationBtn">SUBMIT FOUNDATION</button>
-              <button class="nav-btn" id="skipFoundationBtn" style="border-radius:18px;">VIEW TRENDING FOUNDATIONS</button>
-            </div>
-            <div class="tiny">In production, this would be moderated, deduplicated, stored in Supabase, and queued into available foundation options.</div>
-          </section>
+          <div class="bar-label-row">
+            <span>Completion progress</span>
+            <span id="completePercentLabel">0% COMPLETE</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="completeBar"></div>
+          </div>
 
-          <section class="panel" style="margin-top:14px;">
-            <div class="section-icon-title">
-              <span class="section-icon">⌁</span>
-              <h2 class="panel-title" style="margin:0;">Available directions</h2>
+          <div class="vote-meters">
+            <div class="meter">
+              <div class="meter-label">New Direction Votes</div>
+              <div class="meter-value" id="submitVoteMeter">0</div>
             </div>
-            <div class="option-mode-label" id="optionModeLabel"></div>
-            <div class="options" id="options"></div>
+            <div class="meter">
+              <div class="meter-label">Complete Votes</div>
+              <div class="meter-value" id="completeVoteMeter">0</div>
+            </div>
+          </div>
 
-            <div class="frontier" id="frontierBox">
-              <h2 class="panel-title" style="margin-top:12px;">Frontier Panel</h2>
-              <div class="instruction">No more directions are available. Submit a new possibility or vote to complete this category.</div>
-              <input class="handle-input" id="frontierHandleInput" maxlength="32" placeholder="Enter your X handle, e.g. @ideaordie" />
-              <textarea id="frontierInput" maxlength="170" placeholder="Submit a new possibility..."></textarea>
-              <div class="frontier-actions">
-                <button class="primary" id="addPossibilityBtn">SUBMIT POSSIBILITY</button>
-                <button class="primary danger complete-btn locked" id="completeBtn">CATEGORY COMPLETE</button>
-              </div>
-              <div class="tiny">Vote to add a new possibility or complete this category. Completion requires 60% COMPLETE votes.</div>
-              <div class="tiny" id="thresholdNote"></div>
-            </div>
-          </section>
+          <div class="tiny" style="text-align:center;margin-top:12px;">60% COMPLETE required versus new-direction votes after the Frontier Panel appears.</div>
+        </section>
 
-          <section class="panel" style="margin-top:14px;">
-            <div class="section-icon-title">
-              <span class="section-icon">☷</span>
-              <h2 class="panel-title" style="margin:0;">Full progression</h2>
-            </div>
-            <div class="progression" id="progression" style="margin-top:12px;max-height:420px;overflow:auto;padding-right:4px;">
-              <div class="empty">Your selected path will appear here.</div>
-            </div>
-          </section>
-        </div>
-
-        <div>
-          <section class="category-progress-card">
-            <div class="progress-status">
-              <div class="flag">⚑</div>
-              <div>
-                <div class="progress-headline" id="progressHeadline">CATEGORY WAITING</div>
-                <div class="progress-sub" id="progressSub">Select a category to begin.</div>
-              </div>
-            </div>
-
-            <div class="bar-label-row">
-              <span>Completion progress</span>
-              <span id="completePercentLabel">0% COMPLETE</span>
-            </div>
-            <div class="bar-track">
-              <div class="bar-fill" id="completeBar"></div>
-            </div>
-
-            <div class="vote-meters">
-              <div class="meter">
-                <div class="meter-label">Submit Votes</div>
-                <div class="meter-value" id="submitVoteMeter">0</div>
-              </div>
-              <div class="meter">
-                <div class="meter-label">Complete Votes</div>
-                <div class="meter-value" id="completeVoteMeter">0</div>
-              </div>
-            </div>
-
-            <div class="tiny" style="text-align:center;margin-top:12px;">60% required to complete after the Frontier Panel appears.</div>
-          </section>
-
-          <section class="panel" style="margin-top:14px;">
+        <div class="foundation-slot" id="foundationSlot">
+          <section class="panel live-scene-panel">
             <h2 class="panel-title">Live scene</h2>
             <div class="scene" id="scene">
               <div class="ring"></div>
@@ -1106,11 +1196,70 @@
           </section>
         </div>
       </div>
+
+      <section class="panel story-card" id="storyStatusPanel">
+        <div class="category-badge" id="categoryBadge">SELECT A CATEGORY</div>
+        <div class="story-text" id="storyText">Choose what the crowd should develop first.</div>
+        <div class="instruction" id="instructionText">Each selection upvotes the chosen option and implicitly downvotes the other available options.</div>
+      </section>
+
+      <div class="row-grid directions-progression-row">
+        <section class="panel" id="directionsPanel">
+          <div class="section-icon-title">
+            <span class="section-icon">⌁</span>
+            <h2 class="panel-title" style="margin:0;">Available directions</h2>
+          </div>
+          <section class="panel foundation-panel" id="foundationBox" style="margin-bottom:14px;">
+            <div class="section-icon-title">
+              <span class="section-icon">✦</span>
+              <h2 class="panel-title" style="margin:0;">Submit a foundation</h2>
+            </div>
+            <div class="instruction" style="margin-top:10px;">OPTIONAL: Before exploring the trending path, add one possible beginning for this category. Enter your 𝕏 handle for attribution.</div>
+            <input class="handle-input" id="xHandleInput" maxlength="32" placeholder="Enter your X handle, e.g. @" />
+            <textarea id="foundationInput" maxlength="120" placeholder="Submit a new foundation for this category..."></textarea>
+            <div class="char-counter" id="foundationCharCounter">0 / 120</div>
+            <div class="tiny">Keep submissions short — ideally one sentence. Maximum 120 characters.</div>
+            <div class="foundation-actions">
+              <button class="primary" id="submitFoundationBtn">SUBMIT FOUNDATION</button>
+              <button class="nav-btn" id="skipFoundationBtn" style="border-radius:18px;">VIEW TRENDING FOUNDATIONS</button>
+            </div>
+            <div class="tiny">In production, this would be moderated, deduplicated, stored in Supabase, and queued into available foundation options.</div>
+          </section>
+
+          <div class="option-mode-label" id="optionModeLabel"></div>
+          <div class="options" id="options"></div>
+
+          <div class="frontier" id="frontierBox">
+            <h2 class="panel-title" style="margin-top:12px;">Frontier Panel</h2>
+            <div class="instruction">No more directions are available. Submit a new possibility or vote to complete this category.</div>
+            <input class="handle-input" id="frontierHandleInput" maxlength="32" placeholder="Enter your X handle, e.g. @" />
+            <textarea id="frontierInput" maxlength="120" placeholder="Submit a new possibility..."></textarea>
+            <div class="char-counter" id="frontierCharCounter">0 / 120</div>
+            <div class="tiny">Keep submissions short — ideally one sentence. Maximum 120 characters.</div>
+            <div class="frontier-actions">
+              <button class="primary" id="addPossibilityBtn">SUBMIT POSSIBILITY</button>
+              <button class="primary danger complete-btn locked" id="completeBtn">CATEGORY COMPLETE</button>
+            </div>
+            <div class="tiny">Vote to create a new direction or complete this category. Completion requires 60% COMPLETE votes versus new-direction votes.</div>
+            <div class="tiny" id="thresholdNote"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-icon-title">
+            <span class="section-icon">☷</span>
+            <h2 class="panel-title" style="margin:0;">Full progression</h2>
+          </div>
+          <div class="progression" id="progression" style="margin-top:12px;max-height:420px;overflow:auto;padding-right:4px;">
+            <div class="empty">Your selected path will appear here.</div>
+          </div>
+        </section>
+      </div>
     </section>
 
     <section id="archiveView" class="hidden">
       <div class="panel">
-        <h2 class="panel-title">COMPLETED CATEGORIES</h2>
+        <h2 class="panel-title">COMPLETED</h2>
         <div class="archive-controls">
           <input class="archive-search" id="archiveSearch" placeholder="Search completed categories..." />
           <div class="archive-filter-row" id="archiveFilters"></div>
@@ -1119,11 +1268,11 @@
       </div>
     </section>
 
-    <a class="footer-link" href="https://x.com/ideaordie" target="_blank" rel="noopener">ideaordie.com <span>𝕏</span></a>
+    
   </main>
 
   <script>
-    const STORAGE_KEY = "crowd_funning_prototype_v1_0_9";
+    const STORAGE_KEY = "crowd_funning_prototype_v1_2_8";
 
     const COLORS = {
       JOKE: ["#ffd36a", "rgba(255,211,106,0.22)"],
@@ -1267,18 +1416,23 @@
 
     function normalizeHandle(raw) {
       const value = (raw || "").trim().replace(/^@+/, "");
-      if (!/^[A-Za-z0-9_]{1,15}$/.test(value)) return null;
+      if (!/^[A-Za-z0-9_]{1,15}$/.test(value)) return "Anonymous";
       return value;
     }
 
     function attributionLink(handle) {
-      const clean = normalizeHandle(handle) || "ideaordie";
+      const clean = normalizeHandle(handle) || "";
       return `https://x.com/${clean}`;
     }
 
     function attributionHtml(handle) {
-      const clean = normalizeHandle(handle) || "ideaordie";
+      const clean = normalizeHandle(handle) || "";
+      
+      if (clean === "Anonymous") {
+        return `<span class="attribution">ANONYMOUS</span>`;
+      }
       return `<a class="attribution" href="${attributionLink(clean)}" target="_blank" rel="noopener">𝕏 @${clean}</a>`;
+
     }
 
 
@@ -1314,7 +1468,7 @@
           progression: [],
           phase: "foundation_submit",
           foundationSubmitted: false,
-          submitVotes: 1,
+          submitVotes: 0,
           completeVotes: 0,
           progressionThreshold: 4,
           optionSetIndex: 0,
@@ -1325,7 +1479,7 @@
             up: 10 + Math.floor(Math.random() * 18),
             down: 2 + Math.floor(Math.random() * 8),
             isNew: i === 2,
-            originator: "ideaordie",
+            originator: "",
             chosen: false
           }))
         };
@@ -1360,8 +1514,15 @@
 
     function renderCategories() {
       const list = document.getElementById("categoryList");
+      const panel = document.getElementById("categoryPanel");
+      if (panel) panel.classList.toggle("compact", !!state.activeCategory);
       list.innerHTML = "";
-      Object.values(state.categories).forEach(cat => {
+      const categoryArray = Object.values(state.categories);
+      const sortedCategories = state.activeCategory
+        ? [...categoryArray].sort((a, b) => a.name === state.activeCategory ? -1 : b.name === state.activeCategory ? 1 : 0)
+        : categoryArray;
+
+      sortedCategories.forEach(cat => {
         const card = document.createElement("div");
         card.className = "cat-card" + (state.activeCategory === cat.name ? " selected" : "");
         card.style.setProperty("--accent", COLORS[cat.name][0]);
@@ -1396,8 +1557,14 @@
       const completeBtn = document.getElementById("completeBtn");
       const thresholdNote = document.getElementById("thresholdNote");
       const optionModeLabel = document.getElementById("optionModeLabel");
-
+      const storyStatusPanel = document.getElementById("storyStatusPanel");
+      const directionsPanel = document.getElementById("directionsPanel");
       options.innerHTML = "";
+      storyStatusPanel.classList.toggle("stage-hidden", !!name);
+      directionsPanel.classList.remove("completed-hide");
+      foundationBox.classList.remove("completed-hide");
+      directionsPanel.style.display = "";
+      foundationBox.style.display = "";
       frontier.classList.remove("show");
       foundationBox.classList.remove("show");
       optionModeLabel.textContent = "";
@@ -1426,10 +1593,8 @@
       }
 
       if (cat.phase === "foundation_submit") {
-        storyText.textContent = `Submit a new foundation for ${name}.`;
-        instruction.textContent = `After submitting, you’ll see the currently trending ${name} foundations and choose the strongest beginning.`;
         foundationBox.classList.add("show");
-        options.innerHTML = `<div class="empty">Submit a foundation first, then trending foundation options will appear.</div>`;
+        options.innerHTML = ``;
         renderProgression();
         renderCategoryProgress();
         return;
@@ -1480,7 +1645,7 @@
       completeBtn.disabled = !thresholdMet;
 
       thresholdNote.textContent = thresholdMet
-        ? `${name} completion vote: ${completePct}% COMPLETE vs ${100 - completePct}% SUBMIT. Completion requires 60% COMPLETE.`
+        ? `${name} completion vote: ${completePct}% COMPLETE vs ${100 - completePct}% NEW DIRECTION. Completion requires 60% COMPLETE.`
         : `${name} COMPLETE unlocks when the preset available directions run out.`;
 
       renderProgression();
@@ -1498,7 +1663,7 @@
         if (i === index) {
           opt.up += 1;
           opt.chosen = true;
-          cat.progression.push({ text: opt.text, originator: opt.originator || "ideaordie" });
+          cat.progression.push({ text: opt.text, originator: opt.originator || "" });
         } else {
           opt.down += 1;
           opt.isNew = false;
@@ -1534,7 +1699,7 @@
         up: Math.max(0, 6 - cat.optionSetIndex) + Math.floor(Math.random() * 5),
         down: Math.floor(Math.random() * 3),
         isNew: true,
-        originator: "ideaordie",
+        originator: "",
         chosen: false
       }));
       cat.frontierOpen = false;
@@ -1547,14 +1712,10 @@
       const input = document.getElementById("foundationInput");
       const handleInput = document.getElementById("xHandleInput");
       let submittedText = "";
-      let submittedHandle = "ideaordie";
+      let submittedHandle = "";
 
       if (!skipOnly) {
-        submittedHandle = normalizeHandle(handleInput.value);
-        if (!submittedHandle) {
-          alert("Enter a valid X handle using letters, numbers, or underscores.");
-          return;
-        }
+        submittedHandle = normalizeHandle(handleInput.value) || "Anonymous";
 
         const result = moderateInput(input.value);
         if (!result.ok) {
@@ -1562,7 +1723,6 @@
           return;
         }
         submittedText = result.text;
-        cat.submitVotes = (cat.submitVotes || 0) + 1;
       }
 
       const baseOptions = [SEEDS[cat.name].prompt, ...SEEDS[cat.name].options.slice(0, 2)];
@@ -1574,7 +1734,7 @@
         up: i === 0 && submittedText ? 0 : 10 + Math.floor(Math.random() * 14),
         down: i === 0 && submittedText ? 0 : 2 + Math.floor(Math.random() * 6),
         isNew: !!submittedText && i === 0,
-        originator: i === 0 && submittedText ? submittedHandle : "ideaordie",
+        originator: i === 0 && submittedText ? submittedHandle : "",
         chosen: false
       }));
 
@@ -1582,6 +1742,7 @@
       cat.foundationSubmitted = !skipOnly;
       input.value = "";
       handleInput.value = "";
+      updateCharCounters();
       saveState();
       renderAll();
     }
@@ -1601,12 +1762,7 @@
       const handleInput = document.getElementById("frontierHandleInput");
       const cat = state.categories[state.activeCategory];
       if (!cat || cat.completed) return;
-
-      const submittedHandle = normalizeHandle(handleInput.value);
-      if (!submittedHandle) {
-        alert("Enter a valid X handle using letters, numbers, or underscores.");
-        return;
-      }
+      const submittedHandle = normalizeHandle(handleInput.value) || "Anonymous";
 
       const result = moderateInput(input.value);
       if (!result.ok) {
@@ -1614,6 +1770,7 @@
         return;
       }
 
+      // Only Frontier Panel submissions count as NEW DIRECTION votes for the completion ratio.
       cat.submitVotes = (cat.submitVotes || 0) + 1;
 
       const fallbackSets = presetOptionSets[cat.name] || [];
@@ -1626,7 +1783,7 @@
         up: 0,
         down: 0,
         isNew: true,
-        originator: i === 0 ? submittedHandle : "ideaordie",
+        originator: i === 0 ? submittedHandle : "",
         chosen: false
       }));
 
@@ -1635,6 +1792,7 @@
 
       input.value = "";
       handleInput.value = "";
+      updateCharCounters();
       saveState();
       renderAll();
     }
@@ -1676,7 +1834,6 @@
 
       saveState();
       renderAll();
-      showArchive();
     }
 
     function renderProgression() {
@@ -1697,7 +1854,7 @@
 
       box.innerHTML = path.map((entry, i) => {
         const text = entry.text || entry;
-        const originator = entry.originator || "ideaordie";
+        const originator = entry.originator || "";
         return `
           <div class="step">
             <div class="step-number">${i === 0 ? "FOUNDATION" : "STEP " + i}</div>
@@ -1823,7 +1980,7 @@
                     <div class="progression" style="max-height:360px;overflow:auto;margin-top:10px;padding-right:4px;">
                       ${(item.progression || []).map((entry, i) => {
                         const text = entry.text || entry;
-                        const originator = entry.originator || "ideaordie";
+                        const originator = entry.originator || "";
                         return `
                           <div class="step" style="--accent:${COLORS[item.name][0]}">
                             <div class="step-number">${i === 0 ? "FOUNDATION" : "STEP " + i}</div>
@@ -1873,6 +2030,23 @@
       renderCategories();
       renderMain();
       renderArchive();
+      updateCharCounters();
+    }
+
+
+    function updateCharCounters() {
+      const foundationInput = document.getElementById("foundationInput");
+      const foundationCounter = document.getElementById("foundationCharCounter");
+      const frontierInput = document.getElementById("frontierInput");
+      const frontierCounter = document.getElementById("frontierCharCounter");
+
+      if (foundationInput && foundationCounter) {
+        foundationCounter.textContent = `${foundationInput.value.length} / 120`;
+      }
+
+      if (frontierInput && frontierCounter) {
+        frontierCounter.textContent = `${frontierInput.value.length} / 120`;
+      }
     }
 
     document.getElementById("homeBtn").addEventListener("click", showHome);
@@ -1886,8 +2060,123 @@
       archiveSearch = event.target.value;
       renderArchive();
     });
+    document.getElementById("foundationInput").addEventListener("input", updateCharCounters);
+    document.getElementById("frontierInput").addEventListener("input", updateCharCounters);
 
     renderAll();
+    updateCharCounters();
   </script>
+
+
+<!--  Floating External Link Panel -->
+<style>
+.-panel {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  padding: 8px 14px;
+  border-radius: 999px;
+
+  background: linear-gradient(180deg, rgba(8,8,8,0.98), rgba(0,0,0,0.98));
+  border: 1px solid rgba(255,255,255,0.18);
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 0 18px rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(8px);
+}
+
+.-panel a {
+  text-decoration: none;
+  color: #fff;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+
+  transition: all 0.2s ease;
+}
+
+.-panel a:hover {
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-1px);
+}
+
+.-panel a:active {
+  transform: translateY(2px);
+}
+</style>
+
+<div class="-panel">
+  
+  
+</div>
+
+
+<!-- IDEAorDIE Floating External Link Panel -->
+<style>
+.ideaordie-panel {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(8,8,8,0.98), rgba(0,0,0,0.98));
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 0 18px rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+}
+
+.ideaordie-panel a {
+  text-decoration: none;
+  color: #fff;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: all 0.2s ease;
+}
+
+.ideaordie-panel a:hover {
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-1px);
+}
+
+.ideaordie-panel a:active {
+  transform: translateY(2px);
+}
+</style>
+
+<div class="ideaordie-panel">
+  <a href="https://ideaordie.com" target="_blank">IDEAORDIE</a>
+  <a href="https://x.com/ideaordie" target="_blank">𝕏</a>
+</div>
+
 </body>
 </html>
+
