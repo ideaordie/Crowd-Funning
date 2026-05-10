@@ -67,30 +67,31 @@
 
     @media (max-width: 699px) {
       .brand {
-        gap: 16px;
-        justify-content: flex-start;
+        gap: 14px;
+        justify-content: center;
         text-align: left;
         align-items: center;
+        width: 100%;
       }
 
       .brand-logo {
-        width: 108px;
-        height: 108px;
-        border-radius: 24px;
-        flex-shrink: 0;
+        width: 76px;
+        height: 76px;
+        border-radius: 18px;
+        flex: 0 0 76px;
       }
 
       .logo {
-        font-size: clamp(62px, 12vw, 82px) !important;
+        font-size: clamp(42px, 9.4vw, 58px) !important;
         line-height: 0.88;
         text-align: left;
       }
 
       .tagline {
-        font-size: 19px !important;
-        line-height: 1.2;
+        font-size: 16px !important;
+        line-height: 1.22;
         text-align: left;
-        max-width: 340px;
+        max-width: 280px;
         margin-left: 0;
         margin-right: 0;
       }
@@ -122,8 +123,8 @@
       }
 
       .brand-logo {
-        width: 54px;
-        height: 54px;
+        width: 76px;
+        height: 76px;
       }
     }
 
@@ -688,6 +689,24 @@
     }
 
 
+
+
+    #directionsPanel.foundation-only {
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+
+    #directionsPanel.foundation-only > .section-icon-title,
+    #directionsPanel.foundation-only > .option-mode-label,
+    #directionsPanel.foundation-only > .options {
+      display: none !important;
+    }
+
+    #directionsPanel.foundation-only #foundationBox {
+      margin-bottom: 0 !important;
+    }
 
     .row-grid {
       display: grid;
@@ -1319,7 +1338,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY = "crowd_funning_prototype_v1_3_0";
+    const STORAGE_KEY = "crowd_funning_prototype_v1_3_1";
 
     const COLORS = {
       JOKE: ["#ffd36a", "rgba(255,211,106,0.22)"],
@@ -1607,11 +1626,16 @@
       const storyStatusPanel = document.getElementById("storyStatusPanel");
       const directionsPanel = document.getElementById("directionsPanel");
       options.innerHTML = "";
+      directionsPanel.classList.remove("foundation-only");
       storyStatusPanel.classList.toggle("stage-hidden", !!name);
       directionsPanel.classList.remove("completed-hide");
       foundationBox.classList.remove("completed-hide");
       directionsPanel.style.display = "";
       foundationBox.style.display = "";
+      const dirTitle = directionsPanel.querySelector(".section-icon-title");
+      if (dirTitle) dirTitle.style.display = "";
+      optionModeLabel.style.display = "";
+      options.style.display = "";
       frontier.classList.remove("show");
       foundationBox.classList.remove("show");
       optionModeLabel.textContent = "";
@@ -1640,20 +1664,13 @@
       }
 
       if (cat.phase === "foundation_submit") {
-        directionsPanel.querySelector(".section-icon-title").style.display = "none";
-        optionModeLabel.style.display = "none";
-        options.style.display = "none";
+        directionsPanel.classList.add("foundation-only");
         foundationBox.classList.add("show");
         options.innerHTML = ``;
         renderProgression();
         renderCategoryProgress();
         return;
       }
-
-      directionsPanel.querySelector(".section-icon-title").style.display = "";
-      optionModeLabel.style.display = "";
-      options.style.display = "";
-
       storyText.textContent = cat.progression.length ? (cat.progression[cat.progression.length - 1].text || cat.progression[cat.progression.length - 1]) : `Choose the beginning of this ${name}.`;
       instruction.textContent = cat.phase === "foundation_select"
         ? `Pick the strongest foundation. Your choice starts the progression and pressures the other foundations toward shedding.`
