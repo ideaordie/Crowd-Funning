@@ -72,7 +72,7 @@
       }
 
       .tagline {
-        font-size: 16px !important;
+        font-size: 20px !important;
         line-height: 1.22;
         text-align: left;
         max-width: 280px;
@@ -1217,8 +1217,9 @@
 }
 
 .tagline {
+  display: block !important;
   text-align: center !important;
-  font-size: clamp(15px, 3.2vw, 19px) !important;
+  font-size: clamp(19px, 4vw, 24px) !important;
   line-height: 1.25 !important;
   max-width: 520px !important;
   margin-left: auto !important;
@@ -1334,7 +1335,7 @@
   </div>
 
   <div class="tagline">
-    Develop the internet’s next questionable masterpiece.
+    Develop the internet’s next<br>questionable masterpiece.
   </div>
 </section>
 
@@ -1379,8 +1380,6 @@
               <div class="meter-value" id="completeVoteMeter">0</div>
             </div>
           </div>
-
-          <div class="tiny" style="text-align:center;margin-top:12px;">60% COMPLETE required versus new-direction votes after the Frontier Panel appears.</div>
         </section>
 
         <div class="foundation-slot" id="foundationSlot">
@@ -1390,9 +1389,7 @@
               <div class="ring"></div>
               <div class="orb"></div>
               <div class="static-line"></div>
-            </div>
-            <div class="tiny" id="sceneNote">Scene changes based on selected category and progression length.</div>
-          </section>
+            </div>          </section>
         </div>
       </div>
 
@@ -1429,8 +1426,7 @@
           <div class="options" id="options"></div>
 
           <div class="frontier" id="frontierBox">
-            <h2 class="panel-title" style="margin-top:12px;">Frontier Panel</h2>
-            <div class="instruction">No more directions are available. Submit a new possibility or vote to complete this category.</div>
+            
             <input class="handle-input" id="frontierHandleInput" maxlength="32" placeholder="@yourhandle" />
             <textarea id="frontierInput" maxlength="120" placeholder="Submit a new possibility..."></textarea>
             <div class="char-counter" id="frontierCharCounter">0 / 120</div>
@@ -1439,8 +1435,7 @@
               <button class="primary" id="addPossibilityBtn">SUBMIT POSSIBILITY</button>
               <button class="primary danger complete-btn locked" id="completeBtn">CATEGORY COMPLETE</button>
             </div>
-            <div class="tiny">Vote to create a new direction or complete this category. Completion requires 60% COMPLETE votes versus new-direction votes.</div>
-            <div class="tiny" id="thresholdNote"></div>
+            
           </div>
         </section>
 
@@ -1471,7 +1466,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY = "crowd_funning_prototype_v1_3_6";
+    const STORAGE_KEY = "crowd_funning_prototype_v1_4_1";
 
     const COLORS = {
       JOKE: ["#ffd36a", "rgba(255,211,106,0.22)"],
@@ -1778,7 +1773,7 @@
         badge.textContent = "SELECT A CATEGORY";
         storyText.textContent = "Choose what the crowd should develop first.";
         instruction.textContent = "The first action after category selection is to submit a possible foundation.";
-        thresholdNote.textContent = "";
+        if (thresholdNote) thresholdNote.textContent = "";
         renderProgression();
         renderCategoryProgress();
         return;
@@ -1848,7 +1843,7 @@
       completeBtn.classList.toggle("locked", !thresholdMet);
       completeBtn.disabled = !thresholdMet;
 
-      thresholdNote.textContent = thresholdMet
+      if (thresholdNote) thresholdNote.textContent = thresholdMet
         ? `${name} completion vote: ${completePct}% COMPLETE vs ${100 - completePct}% NEW DIRECTION. Completion requires 60% COMPLETE.`
         : `${name} COMPLETE unlocks when the preset available directions run out.`;
 
