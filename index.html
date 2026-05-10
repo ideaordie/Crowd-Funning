@@ -1250,6 +1250,77 @@
   }
 }
 
+
+/* FOUNDATION STATE SPACING FIX */
+#directionsPanel.foundation-only {
+  margin-bottom: 14px !important;
+}
+
+@media (max-width: 919px) {
+  #directionsPanel.foundation-only {
+    margin-bottom: 18px !important;
+  }
+
+  #directionsPanel.foundation-only #foundationBox {
+    margin-bottom: 0 !important;
+  }
+
+  .directions-progression-row {
+    gap: 18px !important;
+  }
+}
+
+
+/* FINAL CLEANUP: FOUNDATION ALIGNMENT + MATCHED PROGRESS PANEL */
+.category-progress-card {
+  background:
+    radial-gradient(circle at top left, var(--accent-soft, rgba(255,255,255,0.10)), transparent 34%),
+    linear-gradient(180deg, rgba(26, 26, 34, 0.96), rgba(10, 10, 14, 0.94)) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  border-top-color: rgba(255,255,255,0.25) !important;
+  box-shadow:
+    0 0 26px var(--accent-soft, rgba(255,255,255,0.10)),
+    0 18px 60px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+.directions-progression-row {
+  margin-top: 14px !important;
+  align-items: stretch !important;
+}
+
+#directionsPanel.foundation-only {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  height: 100% !important;
+}
+
+#directionsPanel.foundation-only #foundationBox {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  height: 100% !important;
+}
+
+@media (min-width: 920px) {
+  .directions-progression-row {
+    align-items: start !important;
+  }
+
+  #directionsPanel.foundation-only {
+    align-self: start !important;
+  }
+}
+
+@media (max-width: 919px) {
+  .directions-progression-row {
+    gap: 14px !important;
+  }
+
+  #directionsPanel.foundation-only {
+    margin-bottom: 0 !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1337,7 +1408,7 @@
             <span class="section-icon">⌁</span>
             <h2 class="panel-title" style="margin:0;">Available directions</h2>
           </div>
-          <section class="panel foundation-panel" id="foundationBox" style="margin-bottom:14px;">
+          <section class="panel foundation-panel" id="foundationBox">
             <div class="section-icon-title">
               <span class="section-icon">✦</span>
               <h2 class="panel-title" style="margin:0;">Submit a foundation</h2>
@@ -1400,7 +1471,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY = "crowd_funning_prototype_v1_3_4";
+    const STORAGE_KEY = "crowd_funning_prototype_v1_3_6";
 
     const COLORS = {
       JOKE: ["#ffd36a", "rgba(255,211,106,0.22)"],
