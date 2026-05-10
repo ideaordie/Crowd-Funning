@@ -67,30 +67,32 @@
 
     @media (max-width: 699px) {
       .brand {
-        gap: 14px;
-        justify-content: center;
-        text-align: center;
+        gap: 16px;
+        justify-content: flex-start;
+        text-align: left;
+        align-items: center;
       }
 
       .brand-logo {
-        width: 82px;
-        height: 82px;
-        border-radius: 20px;
+        width: 108px;
+        height: 108px;
+        border-radius: 24px;
         flex-shrink: 0;
       }
 
       .logo {
-        font-size: clamp(54px, 11vw, 74px) !important;
+        font-size: clamp(62px, 12vw, 82px) !important;
         line-height: 0.88;
+        text-align: left;
       }
 
       .tagline {
-        font-size: 18px !important;
-        line-height: 1.22;
-        text-align: center;
-        max-width: 320px;
-        margin-left: auto;
-        margin-right: auto;
+        font-size: 19px !important;
+        line-height: 1.2;
+        text-align: left;
+        max-width: 340px;
+        margin-left: 0;
+        margin-right: 0;
       }
 
       .topbar {
@@ -1260,7 +1262,7 @@
               <h2 class="panel-title" style="margin:0;">Submit a foundation</h2>
             </div>
             <div class="instruction" style="margin-top:10px;">OPTIONAL: Before exploring the trending path, add one possible beginning for this category. Enter your 𝕏 handle for attribution.</div>
-            <input class="handle-input" id="xHandleInput" maxlength="32" placeholder="Enter your X handle, e.g. @" />
+            <input class="handle-input" id="xHandleInput" maxlength="32" placeholder="@yourhandle" />
             <textarea id="foundationInput" maxlength="120" placeholder="Submit a new foundation for this category..."></textarea>
             <div class="char-counter" id="foundationCharCounter">0 / 120</div>
             <div class="tiny">Keep submissions short — ideally one sentence. Maximum 120 characters.</div>
@@ -1277,7 +1279,7 @@
           <div class="frontier" id="frontierBox">
             <h2 class="panel-title" style="margin-top:12px;">Frontier Panel</h2>
             <div class="instruction">No more directions are available. Submit a new possibility or vote to complete this category.</div>
-            <input class="handle-input" id="frontierHandleInput" maxlength="32" placeholder="Enter your X handle, e.g. @" />
+            <input class="handle-input" id="frontierHandleInput" maxlength="32" placeholder="@yourhandle" />
             <textarea id="frontierInput" maxlength="120" placeholder="Submit a new possibility..."></textarea>
             <div class="char-counter" id="frontierCharCounter">0 / 120</div>
             <div class="tiny">Keep submissions short — ideally one sentence. Maximum 120 characters.</div>
@@ -1317,7 +1319,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY = "crowd_funning_prototype_v1_2_9";
+    const STORAGE_KEY = "crowd_funning_prototype_v1_3_0";
 
     const COLORS = {
       JOKE: ["#ffd36a", "rgba(255,211,106,0.22)"],
@@ -1638,12 +1640,19 @@
       }
 
       if (cat.phase === "foundation_submit") {
+        directionsPanel.querySelector(".section-icon-title").style.display = "none";
+        optionModeLabel.style.display = "none";
+        options.style.display = "none";
         foundationBox.classList.add("show");
         options.innerHTML = ``;
         renderProgression();
         renderCategoryProgress();
         return;
       }
+
+      directionsPanel.querySelector(".section-icon-title").style.display = "";
+      optionModeLabel.style.display = "";
+      options.style.display = "";
 
       storyText.textContent = cat.progression.length ? (cat.progression[cat.progression.length - 1].text || cat.progression[cat.progression.length - 1]) : `Choose the beginning of this ${name}.`;
       instruction.textContent = cat.phase === "foundation_select"
