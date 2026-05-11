@@ -2268,51 +2268,14 @@
       if (!selected) return;
 
       if (state.activeCategory === "JOKE" && cat.liveEntry && selected.liveDirectionId) {
-        try {
-          let userId = state.currentUserId;
+        cat.preselectedOptionIndex = index;
+        cat.preselectedDirectionId = selected.liveDirectionId;
+        cat.preselectedDirectionText = selected.text;
+        cat.preselectedOptionKey = selected.optionKey || selected.text;
 
-          if (!userId) {
-            const user = await initializeSupabaseAuth();
-            userId = user && user.id;
-          }
-
-          if (!userId) {
-            console.error("CROWD FUNNING: cannot preselect without a user id.");
-            return;
-          }
-
-          const { error } = await crowdFunningSupabase.rpc("select_direction", {
-            p_user_id: userId,
-            p_entry_id: cat.liveEntry.entryId,
-            p_parent_node_id: cat.liveEntry.nodeId,
-            p_selected_direction_id: selected.liveDirectionId
-          });
-
-          if (error) {
-            console.error("CROWD FUNNING: live preselection vote failed:", error);
-            return;
-          }
-
-          cat.preselectedOptionIndex = index;
-          cat.preselectedDirectionId = selected.liveDirectionId;
-          cat.preselectedDirectionText = selected.text;
-          cat.preselectedOptionKey = selected.optionKey || selected.text;
-          cat.preselectedOptionKey = selected.optionKey || selected.text;
-
-          await loadLiveEntryForCategory("JOKE");
-
-          const refreshedIndex = cat.options.findIndex(opt => opt.liveDirectionId === selected.liveDirectionId);
-          cat.preselectedOptionIndex = refreshedIndex >= 0 ? refreshedIndex : index;
-          cat.preselectedDirectionId = selected.liveDirectionId;
-          cat.preselectedDirectionText = selected.text;
-
-          saveState();
-          renderAll();
-          return;
-        } catch (err) {
-          console.error("CROWD FUNNING: unexpected live preselection error:", err);
-          return;
-        }
+        saveState();
+        renderAll();
+        return;
       }
 
       cat.options.forEach((opt, i) => {
@@ -2351,6 +2314,31 @@
       }
 
       try {
+        let userId = state.currentUserId;
+
+        if (!userId) {
+          const user = await initializeSupabaseAuth();
+          userId = user && user.id;
+        }
+
+        if (!userId) {
+          console.error("CROWD FUNNING: cannot commit score without a user id.");
+          return;
+        }
+
+        const { error: voteError } = await crowdFunningSupabase.rpc("select_direction", {
+          p_user_id: userId,
+          p_entry_id: cat.liveEntry.entryId,
+          p_parent_node_id: cat.liveEntry.nodeId,
+          p_selected_direction_id: selected.liveDirectionId
+        });
+
+        if (voteError) {
+          console.error("CROWD FUNNING: live commit score failed:", voteError);
+          alert("Commit scoring failed. Check the console for details.");
+          return;
+        }
+
         if (!Array.isArray(cat.progression)) {
           cat.progression = [];
         }
