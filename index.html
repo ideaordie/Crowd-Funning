@@ -1350,6 +1350,50 @@
 </style>
 </head>
 <body>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL =
+  'https://asfrvwhoixkwddfypncd.supabase.co';
+
+const SUPABASE_ANON_KEY =
+  'sb_publishable_ffkIoapiBEflA2ctNjaEWw_gT74cQwh';
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+async function initializeSupabaseAuth() {
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+
+    const { error } =
+      await supabase.auth.signInAnonymously();
+
+    if (error) {
+      console.error(
+        'Anonymous auth failed:',
+        error
+      );
+      return;
+    }
+  }
+
+  console.log(
+    'CROWD FUNNING connected to Supabase'
+  );
+}
+
+initializeSupabaseAuth();
+</script>
+
+
   <main class="app">
     
     
