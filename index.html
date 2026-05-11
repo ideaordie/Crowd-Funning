@@ -1347,6 +1347,45 @@
   height: auto !important;
 }
 
+
+/* PRESELECT + COMMIT UX */
+.option-card.preselected {
+  border-color: var(--accent, #fff) !important;
+  box-shadow:
+    0 0 34px var(--accent-soft, rgba(255,255,255,0.22)),
+    inset 0 0 34px rgba(255,255,255,0.065) !important;
+  transform: translateY(-2px) scale(1.01);
+}
+
+.selected-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  margin-top: 10px;
+  background: var(--accent-soft, rgba(255,255,255,0.14));
+  color: var(--accent, #fff);
+  border: 1px solid var(--accent, #fff);
+}
+
+.commit-card-action {
+  margin-top: 12px;
+  display: grid;
+  gap: 7px;
+}
+
+.commit-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+  text-align: center;
+}
+
 </style>
 </head>
 <body>
@@ -1801,16 +1840,20 @@
 
           if (error) {
             console.error("CROWD FUNNING: Anonymous auth failed:", error);
-            return;
+            return null;
           }
 
+          state.currentUserId = data.user.id;
           console.log("CROWD FUNNING: anonymous user signed in:", data.user.id);
-          return;
+          return data.user;
         }
 
+        state.currentUserId = session.user.id;
         console.log("CROWD FUNNING: existing Supabase session found:", session.user.id);
+        return session.user;
       } catch (err) {
         console.error("CROWD FUNNING: auth startup failed:", err);
+        return null;
       }
     }
 
@@ -1910,10 +1953,121 @@
       });
     }
 
-    function selectCategory(name) {
+
+    async function loadLiveEntryForCategory(categoryName) {
+      const slug = String(categoryName || "").toLowerCase();
+
+      try {
+        console.log(`CROWD FUNNING: requesting live entry for ${slug}...`);
+
+        const { data, error } = await crowdFunningSupabase
+          .from("active_entry_directions")
+          .select("*")
+          .eq("category_slug", slug)
+          .order("direction_created_at", { ascending: true });
+
+        if (error) {
+          console.error("CROWD FUNNING: live entry load failed:", error);
+          return false;
+        }
+
+        if (!Array.isArray(data) || !data.length) {
+          console.warn(`CROWD FUNNING: no live entry directions found for ${categoryName}. Using local prototype state.`);
+          return false;
+        }
+
+        const first = data[0];
+        const cat = state.categories[categoryName];
+
+        if (!cat) return false;
+
+        cat.liveEntry = {
+          entryId: first.entry_id,
+          title: first.title,
+          categorySlug: first.category_slug,
+          categoryLabel: first.category_label,
+          nodeId: first.node_id,
+          currentNode: first.current_node,
+          depth: first.depth,
+          directions: data.map(row => ({
+            id: row.direction_id,
+            text: row.direction,
+            up: Number(row.selection_count || row.score || 0),
+            down: 0,
+            score: Number(row.score || 0),
+            selectionCount: Number(row.selection_count || 0),
+            status: row.direction_status
+          }))
+        };
+
+        cat.prompt = first.current_node;
+
+        if (!Array.isArray(cat.progression)) {
+          cat.progression = [];
+        }
+
+        cat.options = cat.liveEntry.directions.map((direction, index) => ({
+          id: direction.id,
+          text: direction.text,
+          up: direction.up,
+          down: direction.down,
+          score: direction.score,
+          selectionCount: direction.selectionCount,
+          isNew: false,
+          originator: "SUPABASE",
+          chosen: false,
+          liveDirectionId: direction.id
+        }));
+        cat.phase = cat.jokeFirstFoundationCommitted ? "direction_select" : "foundation_select";
+        cat.foundationSubmitted = true;
+        cat.frontierOpen = false;
+        cat.completed = false;
+        cat.liveLoading = false;
+
+        if (cat.preselectedDirectionId) {
+          const selectedIndex = cat.options.findIndex(opt => opt.liveDirectionId === cat.preselectedDirectionId);
+          cat.preselectedOptionIndex = selectedIndex >= 0 ? selectedIndex : null;
+          if (selectedIndex < 0) {
+            cat.preselectedDirectionId = null;
+            cat.preselectedDirectionText = "";
+          }
+        }
+
+        saveState();
+
+        console.log("CROWD FUNNING: live entry loaded:", cat.liveEntry);
+        return true;
+      } catch (err) {
+        console.error("CROWD FUNNING: unexpected live entry error:", err);
+        return false;
+      }
+    }
+
+    async function refreshActiveLiveEntry() {
+      if (state.activeCategory === "JOKE") {
+        const loaded = await loadLiveEntryForCategory("JOKE");
+        if (loaded) renderAll();
+      }
+    }
+
+    async function selectCategory(name) {
       const cat = state.categories[name];
       state.activeCategory = name;
       cat.selections += 1;
+
+      if (name === "JOKE" && !cat.jokeFoundationGatePassed) {
+        cat.phase = "foundation_submit";
+        cat.foundationSubmitted = false;
+        cat.frontierOpen = false;
+        cat.liveLoading = false;
+        cat.liveEntry = null;
+        cat.options = [];
+        cat.preselectedOptionIndex = null;
+        cat.preselectedDirectionId = null;
+        cat.preselectedDirectionText = "";
+        cat.jokeFirstFoundationCommitted = false;
+      }
+
       saveState();
       renderAll();
     }
@@ -1969,6 +2123,18 @@
         return;
       }
 
+      if (cat.liveLoading) {
+        storyText.textContent = "Loading live JOKE options from Supabase...";
+        instruction.textContent = "Foundation step complete. Synchronizing the active branching graph.";
+        optionModeLabel.textContent = "Live backend sync";
+        options.innerHTML = `<div class="empty">Loading available directions...</div>`;
+        foundationBox.classList.remove("show");
+        frontier.classList.remove("show");
+        renderProgression();
+        renderCategoryProgress();
+        return;
+      }
+
       if (cat.phase === "foundation_submit") {
         directionsPanel.classList.add("foundation-only");
         foundationBox.classList.add("show");
@@ -1987,24 +2153,43 @@
       } else if (!cat.frontierOpen) {
         optionModeLabel.textContent = cat.phase === "foundation_select" ? "Trending foundations" : "Next available directions";
         cat.options.forEach((opt, index) => {
-          const score = opt.up - opt.down;
-          const collapsing = opt.down >= opt.up + 8;
-          const canon = opt.up >= 35;
+          const score = typeof opt.score === "number" ? opt.score : opt.up - opt.down;
+          const shownUp = typeof opt.selectionCount === "number" ? opt.selectionCount : opt.up;
+          const shownDown = opt.down || 0;
+          const collapsing = shownDown >= shownUp + 8;
+          const canon = shownUp >= 35;
+          const isPreselected = cat.preselectedOptionIndex === index;
           const card = document.createElement("div");
-          card.className = "option-card" + (collapsing ? " dead" : "");
+          card.className = "option-card" + (collapsing ? " dead" : "") + (isPreselected ? " preselected" : "");
           card.innerHTML = `
             <div class="option-copy">${opt.text}</div>
             ${attributionHtml(opt.originator)}
             <div class="vote-row">
-              <span class="up">▲ ${opt.up}</span>
-              <span class="down">▼ ${opt.down}</span>
+              <span class="up">▲ ${shownUp}</span>
+              <span class="down">▼ ${shownDown}</span>
               <span>score ${score}</span>
             </div>
             ${opt.isNew ? `<span class="new-pill">NEW</span>` : ""}
+            ${isPreselected ? `<span class="selected-pill">SELECTED</span>` : ""}
             ${collapsing ? `<span class="collapse-pill">DESTABILIZING</span>` : ""}
             ${canon ? `<span class="canon-pill">CANON PRESSURE</span>` : ""}
+            ${isPreselected ? `
+              <div class="commit-card-action">
+                <button class="primary commit-progression-btn" type="button">COMMIT TO PROGRESSION</button>
+                <div class="commit-note">This advances the live branch. You can still select a different card before committing.</div>
+              </div>
+            ` : ""}
           `;
-          if (!collapsing) card.addEventListener("click", () => chooseOption(index));
+          if (!collapsing) {
+            card.addEventListener("click", () => chooseOption(index));
+            const commitBtn = card.querySelector(".commit-progression-btn");
+            if (commitBtn) {
+              commitBtn.addEventListener("click", event => {
+                event.stopPropagation();
+                commitPreselectedOption();
+              });
+            }
+          }
           options.appendChild(card);
         });
       } else {
@@ -2029,12 +2214,58 @@
       renderCategoryProgress();
     }
 
-    function chooseOption(index) {
+    async function chooseOption(index) {
       const cat = state.categories[state.activeCategory];
       if (!cat || cat.completed || cat.frontierOpen) return;
 
       const selected = cat.options[index];
       if (!selected) return;
+
+      if (state.activeCategory === "JOKE" && cat.liveEntry && selected.liveDirectionId) {
+        try {
+          let userId = state.currentUserId;
+
+          if (!userId) {
+            const user = await initializeSupabaseAuth();
+            userId = user && user.id;
+          }
+
+          if (!userId) {
+            console.error("CROWD FUNNING: cannot preselect without a user id.");
+            return;
+          }
+
+          const { error } = await crowdFunningSupabase.rpc("select_direction", {
+            p_user_id: userId,
+            p_entry_id: cat.liveEntry.entryId,
+            p_parent_node_id: cat.liveEntry.nodeId,
+            p_selected_direction_id: selected.liveDirectionId
+          });
+
+          if (error) {
+            console.error("CROWD FUNNING: live preselection vote failed:", error);
+            return;
+          }
+
+          cat.preselectedOptionIndex = index;
+          cat.preselectedDirectionId = selected.liveDirectionId;
+          cat.preselectedDirectionText = selected.text;
+
+          await loadLiveEntryForCategory("JOKE");
+
+          const refreshedIndex = cat.options.findIndex(opt => opt.liveDirectionId === selected.liveDirectionId);
+          cat.preselectedOptionIndex = refreshedIndex >= 0 ? refreshedIndex : index;
+          cat.preselectedDirectionId = selected.liveDirectionId;
+          cat.preselectedDirectionText = selected.text;
+
+          saveState();
+          renderAll();
+          return;
+        } catch (err) {
+          console.error("CROWD FUNNING: unexpected live preselection error:", err);
+          return;
+        }
+      }
 
       cat.options.forEach((opt, i) => {
         if (i === index) {
@@ -2057,6 +2288,64 @@
       advanceOptionSet(cat);
       saveState();
       renderAll();
+    }
+
+    async function commitPreselectedOption() {
+      const cat = state.categories[state.activeCategory];
+
+      if (!cat || state.activeCategory !== "JOKE" || !cat.liveEntry) return;
+
+      const selected = cat.options.find(opt => opt.liveDirectionId === cat.preselectedDirectionId);
+
+      if (!selected) {
+        alert("Please select a direction before committing.");
+        return;
+      }
+
+      try {
+        const child1 = "The chicken hires a raccoon compliance officer.";
+        const child2 = "The investors demand a live demo inside a dumpster.";
+        const child3 = "A rival pigeon startup enters the pitch room.";
+
+        const { error } = await crowdFunningSupabase.rpc("promote_direction_with_children", {
+          p_selected_direction_id: selected.liveDirectionId,
+          p_child_direction_1: child1,
+          p_child_direction_2: child2,
+          p_child_direction_3: child3
+        });
+
+        if (error) {
+          console.error("CROWD FUNNING: commit failed:", error);
+          alert("Commit failed. Check the console for details.");
+          return;
+        }
+
+        if (!Array.isArray(cat.progression)) {
+          cat.progression = [];
+        }
+
+        cat.progression.push({
+          text: selected.text,
+          originator: selected.originator || "SUPABASE"
+        });
+
+        if (!cat.jokeFirstFoundationCommitted) {
+          cat.jokeFirstFoundationCommitted = true;
+          cat.phase = "direction_select";
+        }
+
+        cat.preselectedOptionIndex = null;
+        cat.preselectedDirectionId = null;
+        cat.preselectedDirectionText = "";
+
+        await loadLiveEntryForCategory("JOKE");
+
+        saveState();
+        renderAll();
+      } catch (err) {
+        console.error("CROWD FUNNING: unexpected commit error:", err);
+        alert("Commit failed unexpectedly. Check the console for details.");
+      }
     }
 
     function advanceOptionSet(cat) {
@@ -2118,11 +2407,45 @@
 
       cat.phase = "foundation_select";
       cat.foundationSubmitted = !skipOnly;
+
+      if (state.activeCategory === "JOKE") {
+        cat.jokeFoundationGatePassed = true;
+      }
+
       input.value = "";
       handleInput.value = "";
       updateCharCounters();
       saveState();
       renderAll();
+
+      if (state.activeCategory === "JOKE") {
+        loadJokeAfterFoundationGate();
+      }
+    }
+
+    async function loadJokeAfterFoundationGate() {
+      const cat = state.categories[state.activeCategory];
+
+      if (!cat || state.activeCategory !== "JOKE") return false;
+
+      cat.liveLoading = true;
+      cat.phase = cat.jokeFirstFoundationCommitted ? "direction_select" : "foundation_select";
+      saveState();
+      renderAll();
+
+      const loaded = await loadLiveEntryForCategory("JOKE");
+
+      cat.liveLoading = false;
+      cat.phase = cat.jokeFirstFoundationCommitted ? "direction_select" : "foundation_select";
+
+      if (!loaded) {
+        cat.phase = "foundation_select";
+      }
+
+      saveState();
+      renderAll();
+
+      return loaded;
     }
 
     function moderateInput(text) {
@@ -2460,6 +2783,30 @@
     async function bootApp() {
       await initializeSupabaseAuth();
       await loadCategoriesFromSupabase();
+
+      if (state.categories.JOKE && !state.categories.JOKE.jokeFoundationGatePassed && state.categories.JOKE.liveEntry) {
+        state.categories.JOKE.liveEntry = null;
+        state.categories.JOKE.phase = "foundation_submit";
+        state.categories.JOKE.foundationSubmitted = false;
+        state.categories.JOKE.liveLoading = false;
+        state.categories.JOKE.options = [];
+        state.categories.JOKE.preselectedOptionIndex = null;
+        state.categories.JOKE.preselectedDirectionId = null;
+        state.categories.JOKE.preselectedDirectionText = "";
+        state.categories.JOKE.jokeFirstFoundationCommitted = false;
+        saveState();
+      }
+
+      const activeCat = state.categories[state.activeCategory];
+      if (
+        state.activeCategory === "JOKE" &&
+        activeCat &&
+        activeCat.jokeFoundationGatePassed &&
+        activeCat.phase !== "foundation_submit"
+      ) {
+        await loadLiveEntryForCategory("JOKE");
+      }
+
       renderAll();
       updateCharCounters();
     }
