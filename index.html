@@ -2384,6 +2384,7 @@
         });
 
         cat.previouslyCommittedDirectionId = selected.liveDirectionId || null;
+        cat.previouslyCommittedDirectionId = selected.liveDirectionId || null;
         cat.liveCurrentNodeId = selected.nextNodeId || null;
         cat.liveCurrentNodeKey = selected.nextNodeKey || selected.optionKey || selected.text;
 
@@ -2608,6 +2609,8 @@
 
       if (state.activeCategory === "JOKE") {
         try {
+          console.log("CROWD FUNNING: starting pending Frontier submission...");
+
           let userId = state.currentUserId;
 
           if (!userId) {
@@ -2626,27 +2629,58 @@
               ? cat.progression[cat.progression.length - 1]
               : null;
 
-          if (!lastProgressionItem || !lastProgressionItem.optionKey) {
-            console.error("CROWD FUNNING: missing current frontier lineage item.", lastProgressionItem);
-            alert("Frontier submission failed. Current branch node was not found.");
+          const committedText = lastProgressionItem && (lastProgressionItem.text || lastProgressionItem);
+          const committedOptionKey =
+            lastProgressionItem && (
+              lastProgressionItem.optionKey ||
+              lastProgressionItem.nextNodeKey ||
+              committedText
+            );
+
+          const committedDirectionId =
+            lastProgressionItem && (
+              lastProgressionItem.directionId ||
+              cat.previouslyCommittedDirectionId ||
+              null
+            );
+
+          const committedParentNodeId =
+            lastProgressionItem && (
+              lastProgressionItem.parentNodeId ||
+              (cat.liveEntry && cat.liveEntry.nodeId) ||
+              null
+            );
+
+          if (!committedText || !committedOptionKey || !committedParentNodeId) {
+            console.error("CROWD FUNNING: missing Frontier context.", {
+              lastProgressionItem,
+              committedText,
+              committedOptionKey,
+              committedDirectionId,
+              committedParentNodeId,
+              cat
+            });
+            alert("Frontier submission failed. Current branch context was not found.");
             return;
           }
 
           const { data: nodeId, error: nodeError } = await crowdFunningSupabase.rpc("ensure_node_for_committed_direction", {
             p_entry_id: cat.liveEntry.entryId,
-            p_parent_node_id: cat.liveEntry.nodeId,
-            p_direction_id: cat.previouslyCommittedDirectionId || lastProgressionItem.directionId || null,
-            p_node_key: lastProgressionItem.optionKey,
-            p_content: lastProgressionItem.text
+            p_parent_node_id: committedParentNodeId,
+            p_direction_id: committedDirectionId,
+            p_node_key: committedOptionKey,
+            p_content: committedText
           });
 
           if (nodeError || !nodeId) {
-            console.error("CROWD FUNNING: could not ensure frontier node.", nodeError);
+            console.error("CROWD FUNNING: could not ensure Frontier node.", nodeError);
             alert("Frontier submission failed. Could not create the current branch node.");
             return;
           }
 
-          const { error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
+          console.log("CROWD FUNNING: Frontier parent node ready:", nodeId);
+
+          const { data: submissionId, error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
             p_user_id: userId,
             p_entry_id: cat.liveEntry.entryId,
             p_parent_node_id: nodeId,
@@ -2657,12 +2691,11 @@
           });
 
           if (submitError) {
-            console.error("CROWD FUNNING: pending frontier submission failed:", submitError);
+            console.error("CROWD FUNNING: pending Frontier submission failed:", submitError);
             alert("Frontier submission failed. Check the console for details.");
             return;
           }
 
-          // Only Frontier Panel submissions count as NEW DIRECTION votes for the completion ratio.
           cat.submitVotes = (cat.submitVotes || 0) + 1;
           cat.submissionCount = (cat.submissionCount || 0) + 1;
 
@@ -2673,16 +2706,21 @@
           renderAll();
 
           alert("Possibility submitted for review. If approved, it will appear as a live direction.");
-          console.log("CROWD FUNNING: pending frontier submitted:", result.text);
+          console.log("CROWD FUNNING: pending Frontier submitted:", {
+            submissionId,
+            content: result.text,
+            parentNodeId: nodeId,
+            attribution: submittedHandle
+          });
           return;
         } catch (err) {
-          console.error("CROWD FUNNING: unexpected pending frontier submission error:", err);
+          console.error("CROWD FUNNING: unexpected pending Frontier submission error:", err);
           alert("Frontier submission failed unexpectedly. Check the console for details.");
           return;
         }
       }
 
-      // Only Frontier Panel submissions count as NEW DIRECTION votes for the completion ratio.
+      // Local prototype fallback for non-live categories.
       cat.submitVotes = (cat.submitVotes || 0) + 1;
       cat.submissionCount = (cat.submissionCount || 0) + 1;
 
