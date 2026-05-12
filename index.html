@@ -2331,6 +2331,122 @@
       renderAll();
     }
 
+    function buildProgressionPathPayload(cat) {
+      const items = Array.isArray(cat.progression) ? cat.progression : [];
+
+      const normalizedItems = items.map((item, index) => ({
+        index,
+        text: item.text || String(item),
+        originator: item.originator || "",
+        optionKey: item.optionKey || "",
+        directionId: item.directionId || null,
+        parentNodeId: item.parentNodeId || null,
+        nextNodeId: item.nextNodeId || null,
+        nextNodeKey: item.nextNodeKey || ""
+      }));
+
+      const pathKey = normalizedItems
+        .map(item => item.directionId || item.optionKey || item.text)
+        .join(">");
+
+      return {
+        pathKey,
+        pathItems: normalizedItems
+      };
+    }
+
+    async function syncProgressionPath(cat) {
+      if (!cat || state.activeCategory !== "JOKE" || !cat.liveEntry) return null;
+      if (!Array.isArray(cat.progression) || !cat.progression.length) return null;
+
+      const { pathKey, pathItems } = buildProgressionPathPayload(cat);
+
+      if (!pathKey) return null;
+
+      const { data, error } = await crowdFunningSupabase.rpc("upsert_progression_path", {
+        p_entry_id: cat.liveEntry.entryId,
+        p_current_node_id: cat.liveCurrentNodeId || null,
+        p_path_key: pathKey,
+        p_path_items: pathItems
+      });
+
+      if (error) {
+        console.error("CROWD FUNNING: progression path sync failed:", error);
+        return null;
+      }
+
+      cat.currentPathId = data;
+      cat.currentPathKey = pathKey;
+
+      console.log("CROWD FUNNING: progression path synced:", {
+        pathId: data,
+        pathKey,
+        itemCount: pathItems.length
+      });
+
+      return data;
+    }
+
+    async function voteCurrentProgressionPath(cat, voteType) {
+      if (!cat || state.activeCategory !== "JOKE") return false;
+
+      let userId = state.currentUserId;
+
+      if (!userId) {
+        const user = await initializeSupabaseAuth();
+        userId = user && user.id;
+      }
+
+      if (!userId) {
+        console.error("CROWD FUNNING: cannot vote on progression path without a user id.");
+        return false;
+      }
+
+      let pathId = cat.currentPathId;
+
+      if (!pathId) {
+        pathId = await syncProgressionPath(cat);
+      }
+
+      if (!pathId) {
+        console.error("CROWD FUNNING: cannot vote on progression path because no path_id exists.");
+        return false;
+      }
+
+      const { error } = await crowdFunningSupabase.rpc("vote_progression_completion", {
+        p_path_id: pathId,
+        p_user_id: userId,
+        p_vote_type: voteType
+      });
+
+      if (error) {
+        console.error("CROWD FUNNING: progression completion vote failed:", error);
+        return false;
+      }
+
+      const { data: pathRows, error: pathError } = await crowdFunningSupabase
+        .from("progression_paths")
+        .select("complete_votes,new_direction_votes,status")
+        .eq("id", pathId)
+        .limit(1);
+
+      if (!pathError && pathRows && pathRows.length) {
+        cat.completeVotes = Number(pathRows[0].complete_votes || 0);
+        cat.submitVotes = Number(pathRows[0].new_direction_votes || 0);
+        cat.pathStatus = pathRows[0].status || "active";
+      }
+
+      console.log("CROWD FUNNING: progression path vote recorded:", {
+        pathId,
+        voteType,
+        completeVotes: cat.completeVotes || 0,
+        newDirectionVotes: cat.submitVotes || 0
+      });
+
+      saveState();
+      return true;
+    }
+
     async function commitPreselectedOption() {
       const cat = state.categories[state.activeCategory];
 
@@ -2397,6 +2513,8 @@
         cat.preselectedDirectionId = null;
         cat.preselectedDirectionText = "";
         cat.preselectedOptionKey = null;
+
+        await syncProgressionPath(cat);
 
         const loaded = await loadLiveEntryForCategory("JOKE");
 
@@ -2696,8 +2814,9 @@
             return;
           }
 
-          cat.submitVotes = (cat.submitVotes || 0) + 1;
           cat.submissionCount = (cat.submissionCount || 0) + 1;
+
+          await voteCurrentProgressionPath(cat, "new_direction");
 
           input.value = "";
           handleInput.value = "";
@@ -2748,9 +2867,54 @@
       renderAll();
     }
 
-    function completeCategory() {
+    async function completeCategory() {
       const cat = state.categories[state.activeCategory];
       if (!cat || cat.completed || cat.completeVoteSubmitted) return;
+
+      if (state.activeCategory === "JOKE") {
+        const voteOk = await voteCurrentProgressionPath(cat, "complete");
+
+        if (!voteOk) {
+          alert("Complete vote failed. Check the console for details.");
+          return;
+        }
+
+        cat.completeVoteSubmitted = true;
+
+        const totalFinishVotes = (cat.submitVotes || 0) + (cat.completeVotes || 0);
+        const completePct = totalFinishVotes ? Math.round(((cat.completeVotes || 0) / totalFinishVotes) * 100) : 0;
+        const thresholdMet = cat.progression.length >= (cat.progressionThreshold || 4);
+        const collaborationMet = (cat.submissionCount || 0) > 1;
+
+        if (!thresholdMet || !collaborationMet || completePct < 60) {
+          cat.frontierOpen = false;
+          cat.options = [];
+          saveState();
+          renderAll();
+          return;
+        }
+
+        const completedName = generateCompletedName(cat.name, cat.progression);
+
+        cat.completed = true;
+        cat.completedAt = new Date().toLocaleString();
+        cat.completedName = completedName;
+        cat.frontierOpen = false;
+
+        state.archive.unshift({
+          name: cat.name,
+          completedName,
+          completedAt: cat.completedAt,
+          selections: cat.selections,
+          completionShare: completePct,
+          submissionCount: cat.submissionCount || 0,
+          progression: [...cat.progression]
+        });
+
+        saveState();
+        renderAll();
+        return;
+      }
 
       cat.completeVotes = (cat.completeVotes || 0) + 1;
       cat.completeVoteSubmitted = true;
