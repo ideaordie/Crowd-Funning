@@ -1966,15 +1966,32 @@
             ? "foundation"
             : "direction";
 
-        const desiredNodeKey =
+        const desiredNodeId =
           categoryName === "JOKE"
-            ? (cat.liveCurrentNodeKey || "ROOT")
+            ? (cat.liveCurrentNodeId || null)
             : null;
+
+        if (
+          categoryName === "JOKE" &&
+          cat.jokeFirstFoundationCommitted &&
+          !desiredNodeId
+        ) {
+          console.log("CROWD FUNNING: no next_node_id found. Opening Frontier panel.");
+          cat.options = [];
+          cat.frontierOpen = true;
+          cat.liveLoading = false;
+          cat.preselectedOptionIndex = null;
+          cat.preselectedDirectionId = null;
+          cat.preselectedDirectionText = "";
+          cat.preselectedOptionKey = null;
+          saveState();
+          return false;
+        }
 
         console.log("CROWD FUNNING: requesting live entry:", {
           slug,
           desiredDirectionType,
-          desiredNodeKey
+          desiredNodeId
         });
 
         let query = crowdFunningSupabase
@@ -1984,8 +2001,11 @@
 
         if (categoryName === "JOKE") {
           query = query
-            .eq("direction_type", desiredDirectionType)
-            .eq("node_key", desiredNodeKey);
+            .eq("direction_type", desiredDirectionType);
+
+          if (desiredNodeId) {
+            query = query.eq("node_id", desiredNodeId);
+          }
         }
 
         const { data, error } = await query
@@ -2002,7 +2022,7 @@
           console.warn("CROWD FUNNING: no live rows found for current lineage.", {
             categoryName,
             desiredDirectionType,
-            desiredNodeKey
+            desiredNodeId
           });
           return false;
         }
@@ -2028,12 +2048,15 @@
             status: row.direction_status,
             optionKey: row.option_key,
             optionLevel: Number(row.option_level || 0),
-            directionType: row.direction_type
+            directionType: row.direction_type,
+            nextNodeId: row.next_node_id || null,
+            nextNodeKey: row.next_node_key || null
           }))
         };
 
         cat.prompt = first.current_node;
-        cat.liveCurrentNodeKey = first.node_key || desiredNodeKey || "ROOT";
+        cat.liveCurrentNodeId = first.node_id || desiredNodeId || null;
+        cat.liveCurrentNodeKey = first.node_key || "ROOT";
 
         if (!Array.isArray(cat.progression)) {
           cat.progression = [];
@@ -2052,7 +2075,9 @@
           liveDirectionId: direction.id,
           optionKey: direction.optionKey,
           optionLevel: direction.optionLevel,
-          directionType: direction.directionType
+          directionType: direction.directionType,
+          nextNodeId: direction.nextNodeId,
+          nextNodeKey: direction.nextNodeKey
         }));
 
         cat.phase = cat.jokeFirstFoundationCommitted ? "direction_select" : "foundation_select";
@@ -2111,6 +2136,7 @@
         cat.preselectedDirectionText = "";
         cat.preselectedOptionKey = null;
         cat.jokeFirstFoundationCommitted = false;
+        cat.liveCurrentNodeId = null;
         cat.liveCurrentNodeKey = "ROOT";
       }
 
@@ -2201,7 +2227,9 @@
         cat.options.forEach((opt, index) => {
           const score = typeof opt.score === "number" ? opt.score : opt.up - opt.down;
           const shownUp = typeof opt.selectionCount === "number" ? opt.selectionCount : opt.up;
-          const shownDown = opt.down || 0;
+          const shownDown = typeof opt.selectionCount === "number" && typeof opt.score === "number"
+            ? Math.max(0, opt.selectionCount - opt.score)
+            : (opt.down || 0);
           const collapsing = shownDown >= shownUp + 8;
           const canon = shownUp >= 35;
           const isPreselected = cat.preselectedOptionIndex === index;
@@ -2346,10 +2374,13 @@
         cat.progression.push({
           text: selected.text,
           originator: selected.originator || "SUPABASE",
-          optionKey: selected.optionKey || selected.text
+          optionKey: selected.optionKey || selected.text,
+          nextNodeId: selected.nextNodeId || null,
+          nextNodeKey: selected.nextNodeKey || null
         });
 
-        cat.liveCurrentNodeKey = selected.optionKey || selected.text;
+        cat.liveCurrentNodeId = selected.nextNodeId || null;
+        cat.liveCurrentNodeKey = selected.nextNodeKey || selected.optionKey || selected.text;
 
         if (!cat.jokeFirstFoundationCommitted) {
           cat.jokeFirstFoundationCommitted = true;
@@ -2438,6 +2469,7 @@
 
       if (state.activeCategory === "JOKE") {
         cat.jokeFoundationGatePassed = true;
+        cat.liveCurrentNodeId = null;
         cat.liveCurrentNodeKey = "ROOT";
       }
 
