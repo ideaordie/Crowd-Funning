@@ -2378,9 +2378,12 @@
           originator: selected.originator || "SUPABASE",
           optionKey: selected.optionKey || selected.text,
           nextNodeId: selected.nextNodeId || null,
-          nextNodeKey: selected.nextNodeKey || null
+          nextNodeKey: selected.nextNodeKey || null,
+          directionId: selected.liveDirectionId || null,
+          parentNodeId: cat.liveEntry ? cat.liveEntry.nodeId : null
         });
 
+        cat.previouslyCommittedDirectionId = selected.liveDirectionId || null;
         cat.liveCurrentNodeId = selected.nextNodeId || null;
         cat.liveCurrentNodeKey = selected.nextNodeKey || selected.optionKey || selected.text;
 
@@ -2588,17 +2591,95 @@
       return { ok: true, text: cleaned };
     }
 
-    function addPossibility() {
+    async function addPossibility() {
       const input = document.getElementById("frontierInput");
       const handleInput = document.getElementById("frontierHandleInput");
       const cat = state.categories[state.activeCategory];
+
       if (!cat || cat.completed) return;
+
       const submittedHandle = normalizeHandle(handleInput.value) || "Anonymous";
 
       const result = moderateInput(input.value);
       if (!result.ok) {
         alert(result.reason);
         return;
+      }
+
+      if (state.activeCategory === "JOKE") {
+        try {
+          let userId = state.currentUserId;
+
+          if (!userId) {
+            const user = await initializeSupabaseAuth();
+            userId = user && user.id;
+          }
+
+          if (!userId) {
+            console.error("CROWD FUNNING: cannot create pending frontier submission without a user id.");
+            alert("Frontier submission failed. Please reload and try again.");
+            return;
+          }
+
+          const lastProgressionItem =
+            Array.isArray(cat.progression) && cat.progression.length
+              ? cat.progression[cat.progression.length - 1]
+              : null;
+
+          if (!lastProgressionItem || !lastProgressionItem.optionKey) {
+            console.error("CROWD FUNNING: missing current frontier lineage item.", lastProgressionItem);
+            alert("Frontier submission failed. Current branch node was not found.");
+            return;
+          }
+
+          const { data: nodeId, error: nodeError } = await crowdFunningSupabase.rpc("ensure_node_for_committed_direction", {
+            p_entry_id: cat.liveEntry.entryId,
+            p_parent_node_id: cat.liveEntry.nodeId,
+            p_direction_id: cat.previouslyCommittedDirectionId || lastProgressionItem.directionId || null,
+            p_node_key: lastProgressionItem.optionKey,
+            p_content: lastProgressionItem.text
+          });
+
+          if (nodeError || !nodeId) {
+            console.error("CROWD FUNNING: could not ensure frontier node.", nodeError);
+            alert("Frontier submission failed. Could not create the current branch node.");
+            return;
+          }
+
+          const { error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
+            p_user_id: userId,
+            p_entry_id: cat.liveEntry.entryId,
+            p_parent_node_id: nodeId,
+            p_content: result.text,
+            p_submission_type: "frontier",
+            p_direction_type: "direction",
+            p_attribution_handle: submittedHandle
+          });
+
+          if (submitError) {
+            console.error("CROWD FUNNING: pending frontier submission failed:", submitError);
+            alert("Frontier submission failed. Check the console for details.");
+            return;
+          }
+
+          // Only Frontier Panel submissions count as NEW DIRECTION votes for the completion ratio.
+          cat.submitVotes = (cat.submitVotes || 0) + 1;
+          cat.submissionCount = (cat.submissionCount || 0) + 1;
+
+          input.value = "";
+          handleInput.value = "";
+          updateCharCounters();
+          saveState();
+          renderAll();
+
+          alert("Possibility submitted for review. If approved, it will appear as a live direction.");
+          console.log("CROWD FUNNING: pending frontier submitted:", result.text);
+          return;
+        } catch (err) {
+          console.error("CROWD FUNNING: unexpected pending frontier submission error:", err);
+          alert("Frontier submission failed unexpectedly. Check the console for details.");
+          return;
+        }
       }
 
       // Only Frontier Panel submissions count as NEW DIRECTION votes for the completion ratio.
