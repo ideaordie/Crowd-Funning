@@ -576,6 +576,7 @@
 
 
     .progression-preview {
+      margin-top: 12px;
       height: 190px;
       border-radius: 22px;
       border: 1px solid var(--line);
@@ -593,7 +594,8 @@
       overflow-y: auto;
       padding: 14px 14px 10px;
       line-height: 1.45;
-      font-weight: 750;
+      font-weight: 500;
+      font-size: 14px;
       color: var(--text);
       white-space: pre-wrap;
       scrollbar-width: thin;
@@ -601,7 +603,7 @@
 
     .preview-empty {
       color: var(--muted);
-      font-weight: 800;
+      font-weight: 500;
     }
 
     .preview-actions {
@@ -825,24 +827,35 @@
     }
 
     .flag {
-      font-size: 30px;
-      line-height: 1;
-      filter: drop-shadow(0 0 14px var(--accent, #fff));
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: var(--accent, #fff);
+      background: var(--accent-soft, rgba(255,255,255,0.14));
+      border: 1px solid var(--accent, #fff);
+      box-shadow: 0 0 18px var(--accent-soft, rgba(255,255,255,0.14));
+      font-size: 18px;
+      font-weight: 900;
+      flex: 0 0 auto;
     }
 
     .progress-headline {
-      font-weight: 1000;
-      color: var(--accent, #fff);
-      font-size: 18px;
-      letter-spacing: -0.01em;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.18;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--text);
     }
 
     .progress-sub {
-      color: var(--text);
-      opacity: 0.86;
-      font-size: 13px;
-      margin-top: 3px;
-      line-height: 1.35;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 500;
     }
 
     .bar-label-row {
@@ -889,9 +902,9 @@
 
     .meter-label {
       color: var(--muted);
-      font-size: 11px;
-      font-weight: 1000;
-      letter-spacing: 0.06em;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
     }
 
@@ -932,8 +945,19 @@
     }
 
     .section-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
       color: var(--accent, #fff);
-      font-size: 22px;
+      background: var(--accent-soft, rgba(255,255,255,0.14));
+      border: 1px solid var(--accent, #fff);
+      box-shadow: 0 0 18px var(--accent-soft, rgba(255,255,255,0.14));
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+      flex: 0 0 auto;
     }
 
     .option-mode-label {
@@ -1506,13 +1530,16 @@
 
         <div class="foundation-slot" id="foundationSlot">
           <section class="panel live-scene-panel">
-            <h2 class="panel-title">Progression Preview</h2>
+            <div class="section-icon-title">
+              <span class="section-icon">◉</span>
+              <h2 class="panel-title" style="margin:0;">Progression Preview</h2>
+            </div>
             <div class="progression-preview" id="progressionPreviewPanel">
               <div class="preview-text preview-empty" id="progressionPreviewText">Your progression preview will appear here after you commit a foundation.</div>
               <div class="preview-actions">
+                <button class="preview-action-btn" id="narratePreviewBtn" type="button">LISTEN</button>
                 <button class="preview-action-btn" id="copyPreviewBtn" type="button">COPY</button>
-                <button class="preview-action-btn" id="sharePreviewBtn" type="button">SHARE</button>
-                <button class="preview-action-btn" id="narratePreviewBtn" type="button">NARRATE</button>
+                <button class="preview-action-btn" id="sharePreviewBtn" type="button">SHARE ON 𝕏</button>
               </div>
             </div>
           </section>
@@ -3078,29 +3105,44 @@
     }
 
     async function shareProgressionPreview() {
-      const text = getProgressionPreviewText();
+      const previewText = getProgressionPreviewText();
 
-      if (!text) {
+      if (!previewText) {
         alert("There is no progression to share yet.");
         return;
       }
 
-      const shareText = `CROWD FUNNING progression:\n\n${text}`;
+      const categoryName = state.activeCategory || "PROJECT";
+      const siteUrl = "https://ideaordie.github.io/Crowd-Funning/";
 
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "CROWD FUNNING Progression",
-            text: shareText
-          });
-          return;
-        } catch (err) {
-          if (err && err.name === "AbortError") return;
-          console.error("CROWD FUNNING: native share failed:", err);
-        }
+      const intro =
+`I used CROWD FUNNING to help develop this new ${categoryName}. Check it out!
+
+`;
+
+      const outro = `
+
+${siteUrl}`;
+
+      const maxTotalLength = 250;
+      const availablePreviewLength =
+        maxTotalLength -
+        intro.length -
+        outro.length -
+        2;
+
+      let trimmedPreview = previewText.trim();
+
+      if (trimmedPreview.length > availablePreviewLength) {
+        trimmedPreview =
+          trimmedPreview.slice(0, Math.max(0, availablePreviewLength - 3)).trim() + "...";
       }
 
+      const shareText =
+`${intro}"${trimmedPreview}"${outro}`;
+
       const xUrl = "https://x.com/intent/tweet?text=" + encodeURIComponent(shareText);
+
       window.open(xUrl, "_blank", "noopener,noreferrer");
     }
 
