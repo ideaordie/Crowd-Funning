@@ -2441,6 +2441,63 @@
       border-radius: 7px !important;
     }
 
+
+    /* Category strip cleanup */
+    .category-panel {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+
+    .category-card {
+      background-image: none !important;
+      box-shadow: none !important;
+      border-radius: 7px !important;
+    }
+
+    body.light-mode .category-card {
+      background: #ffffff !important;
+      border: 1px solid #cfd9de !important;
+    }
+
+    body:not(.light-mode) .category-card {
+      background: #000000 !important;
+      border: 1px solid #2f3336 !important;
+    }
+
+    body.light-mode .category-card.live,
+    body:not(.light-mode) .category-card.live {
+      border-color: var(--accent, #1d9bf0) !important;
+    }
+
+
+    /* Remove remaining category container border/background */
+    .category-panel,
+    .category-list,
+    .categories-wrap,
+    .category-strip {
+      border: none !important;
+      outline: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    body.light-mode .category-panel,
+    body.light-mode .category-list,
+    body.light-mode .categories-wrap,
+    body.light-mode .category-strip,
+    body:not(.light-mode) .category-panel,
+    body:not(.light-mode) .category-list,
+    body:not(.light-mode) .categories-wrap,
+    body:not(.light-mode) .category-strip {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
 </style>
 </head>
 <body>
