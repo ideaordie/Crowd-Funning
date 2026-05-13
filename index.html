@@ -1523,6 +1523,94 @@
       display: none;
     }
 
+
+    body.light-mode {
+      --bg: #f4f1e9;
+      --panel: rgba(255,255,255,0.88);
+      --panel-2: rgba(255,255,255,0.72);
+      --text: #131313;
+      --muted: rgba(20,20,20,0.68);
+      --line: rgba(0,0,0,0.14);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.9), transparent 34%),
+        linear-gradient(180deg, #fbf7ed, #e7e1d3 70%, #d9d0c0);
+      color: var(--text);
+    }
+
+    body.light-mode .panel,
+    body.light-mode .category-progress-card,
+    body.light-mode .category-panel,
+    body.light-mode .story-card {
+      background:
+        radial-gradient(circle at top left, var(--accent-soft, rgba(0,0,0,0.08)), transparent 40%),
+        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,239,229,0.86));
+      box-shadow:
+        0 0 30px var(--accent-soft, rgba(0,0,0,0.08)),
+        0 18px 50px rgba(80,70,50,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    body.light-mode .option-card {
+      background:
+        radial-gradient(circle at top left, var(--accent-soft, rgba(0,0,0,0.08)), transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(242,236,226,0.92));
+      border-color: rgba(0,0,0,0.13);
+      color: var(--text);
+    }
+
+    body.light-mode textarea,
+    body.light-mode input,
+    body.light-mode .archive-search {
+      background: rgba(255,255,255,0.74);
+      color: var(--text);
+      border-color: rgba(0,0,0,0.16);
+    }
+
+    body.light-mode .preview-action-btn,
+    body.light-mode .nav-btn,
+    body.light-mode .filter-chip {
+      background: rgba(255,255,255,0.68);
+      color: var(--text);
+      border-color: rgba(0,0,0,0.16);
+    }
+
+    .appearance-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 18px auto 72px;
+      padding: 8px;
+      width: fit-content;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.22);
+      backdrop-filter: blur(12px);
+    }
+
+    body.light-mode .appearance-toggle {
+      background: rgba(255,255,255,0.64);
+      border-color: rgba(0,0,0,0.14);
+    }
+
+    .appearance-btn {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+    }
+
+    .appearance-btn.active {
+      color: var(--accent, #fff);
+      background: var(--accent-soft, rgba(255,255,255,0.14));
+      border-color: var(--accent, #fff);
+    }
+
 </style>
 </head>
 <body>
@@ -1590,7 +1678,7 @@
               <h2 class="panel-title" style="margin:0;">Path Preview</h2>
             </div>
             <div class="progression-preview" id="progressionPreviewPanel">
-              <div class="preview-text preview-empty" id="progressionPreviewText">Your path progression preview will appear here after you commit a foundation.</div>
+              <div class="preview-text preview-empty" id="progressionPreviewText">Your progression preview will appear here after you commit a foundation.</div>
               <div class="preview-actions">
                 <button class="preview-action-btn" id="narratePreviewBtn" type="button">LISTEN</button>
                 <button class="preview-action-btn" id="copyPreviewBtn" type="button">COPY</button>
@@ -1669,6 +1757,12 @@
     </section>
 
     
+
+    <div class="appearance-toggle" aria-label="Appearance mode selector">
+      <button class="appearance-btn active" id="darkModeBtn" type="button">DARK</button>
+      <button class="appearance-btn" id="lightModeBtn" type="button">LIGHT</button>
+    </div>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3152,7 +3246,7 @@
       const text = getProgressionPreviewText();
 
       if (!text) {
-        preview.textContent = "Your path progression preview will appear here after you commit a foundation.";
+        preview.textContent = "Your progression preview will appear here after you commit a foundation.";
         preview.classList.add("preview-empty");
         return;
       }
@@ -3476,6 +3570,35 @@ ${siteUrl}`;
       }
     }
 
+    function setAppearanceMode(mode) {
+      const normalized = mode === "light" ? "light" : "dark";
+      document.body.classList.toggle("light-mode", normalized === "light");
+
+      const darkBtn = document.getElementById("darkModeBtn");
+      const lightBtn = document.getElementById("lightModeBtn");
+
+      if (darkBtn) darkBtn.classList.toggle("active", normalized === "dark");
+      if (lightBtn) lightBtn.classList.toggle("active", normalized === "light");
+
+      try {
+        localStorage.setItem("crowd_funning_appearance_mode", normalized);
+      } catch (err) {
+        console.warn("CROWD FUNNING: appearance preference could not be saved.", err);
+      }
+    }
+
+    function initializeAppearanceMode() {
+      let savedMode = "dark";
+
+      try {
+        savedMode = localStorage.getItem("crowd_funning_appearance_mode") || "dark";
+      } catch (err) {
+        savedMode = "dark";
+      }
+
+      setAppearanceMode(savedMode);
+    }
+
     document.getElementById("homeBtn").addEventListener("click", showHome);
     document.getElementById("archiveBtn").addEventListener("click", showArchive);
     document.getElementById("resetBtn").addEventListener("click", resetPrototype);
@@ -3493,8 +3616,12 @@ ${siteUrl}`;
     });
     document.getElementById("foundationInput").addEventListener("input", updateCharCounters);
     document.getElementById("frontierInput").addEventListener("input", updateCharCounters);
+    document.getElementById("darkModeBtn").addEventListener("click", () => setAppearanceMode("dark"));
+    document.getElementById("lightModeBtn").addEventListener("click", () => setAppearanceMode("light"));
+
 
     async function bootApp() {
+      initializeAppearanceMode();
       await initializeSupabaseAuth();
       await loadCategoriesFromSupabase();
 
