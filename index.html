@@ -2980,6 +2980,66 @@
       box-shadow: none !important;
     }
 
+
+    .hidden-reset {
+      display: none !important;
+    }
+
+    .top-actions .nav-btn {
+      width: 138px !important;
+      min-width: 138px !important;
+      max-width: 138px !important;
+    }
+
+    @media (max-width: 520px) {
+      .top-actions .nav-btn {
+        width: 104px !important;
+        min-width: 104px !important;
+        max-width: 104px !important;
+      }
+    }
+
+
+    /* Bottom RESET / DARK / LIGHT controls match top navigation buttons */
+    .appearance-toggle {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 14px !important;
+      border: none !important;
+      outline: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      padding: 0 !important;
+      margin: 18px auto 72px !important;
+    }
+
+    .appearance-toggle .appearance-btn {
+      width: 138px !important;
+      min-width: 138px !important;
+      max-width: 138px !important;
+      height: 46px !important;
+      min-height: 46px !important;
+      padding: 0 !important;
+      border-radius: 7px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    @media (max-width: 520px) {
+      .appearance-toggle {
+        gap: 10px !important;
+      }
+
+      .appearance-toggle .appearance-btn {
+        width: 104px !important;
+        min-width: 104px !important;
+        max-width: 104px !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -3000,8 +3060,8 @@
 
     <div class="top-actions">
       <button class="nav-btn" id="homeBtn">DEVELOP</button>
+      <button class="nav-btn" id="trendingBtn">TRENDING</button>
       <button class="nav-btn" id="archiveBtn">COMPLETED</button>
-      <button class="nav-btn" id="resetBtn">RESET</button>
     </div>
 
     <section id="homeView">
@@ -3117,6 +3177,16 @@
       </div>
     </section>
 
+    <section id="trendingView" class="hidden">
+      <div class="panel">
+        <div class="section-icon-title">
+          <span class="section-icon">↗</span>
+          <h2 class="panel-title" style="margin:0;">Trending</h2>
+        </div>
+        <div class="instruction" style="margin-top:10px;">Highly active incomplete paths will appear here.</div>
+      </div>
+    </section>
+
     <section id="archiveView" class="hidden">
       <div class="panel">
         <h2 class="panel-title">COMPLETED</h2>
@@ -3130,7 +3200,8 @@
 
     
 
-    <div class="appearance-toggle" aria-label="Appearance mode selector">
+    <div class="appearance-toggle" aria-label="Appearance and reset controls">
+      <button class="appearance-btn" id="resetBtn" type="button">RESET</button>
       <button class="appearance-btn active" id="darkModeBtn" type="button">DARK</button>
       <button class="appearance-btn" id="lightModeBtn" type="button">LIGHT</button>
     </div>
@@ -4972,6 +5043,7 @@ ${siteUrl}`;
     }
 
     document.getElementById("homeBtn").addEventListener("click", showHome);
+    document.getElementById("trendingBtn").addEventListener("click", showTrending);
     document.getElementById("archiveBtn").addEventListener("click", showArchive);
     document.getElementById("resetBtn").addEventListener("click", resetPrototype);
     document.getElementById("addPossibilityBtn").addEventListener("click", addPossibility);
