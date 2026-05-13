@@ -2711,6 +2711,59 @@
       border-color: var(--accent, #1d9bf0) !important;
     }
 
+
+    /* Match VIEW TRENDING FOUNDATIONS to main action buttons */
+    #skipFoundationBtn {
+      min-height: 46px !important;
+      height: 46px !important;
+      padding: 0 18px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 7px !important;
+      background: transparent !important;
+      color: var(--text, #e7e9ea) !important;
+      border: 1px solid var(--line, #2f3336) !important;
+      font-weight: 1000 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      line-height: 1 !important;
+      cursor: pointer !important;
+      transition:
+        transform 0.16s ease,
+        color 0.16s ease,
+        background 0.16s ease,
+        border-color 0.16s ease !important;
+    }
+
+    body.light-mode #skipFoundationBtn {
+      background: #ffffff !important;
+      color: #0f1419 !important;
+      border-color: #cfd9de !important;
+    }
+
+    body:not(.light-mode) #skipFoundationBtn {
+      background: #000000 !important;
+      color: #e7e9ea !important;
+      border-color: #2f3336 !important;
+    }
+
+    #skipFoundationBtn:hover {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    #skipFoundationBtn:active {
+      transform: translateY(1px) !important;
+    }
+
+    /* True black floating external link buttons */
+    .ideaordie-panel a,
+    .ideaordie-panel .ideaordie-home-link {
+      background: #000000 !important;
+    }
+
 </style>
 </head>
 <body>
