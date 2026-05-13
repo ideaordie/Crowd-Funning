@@ -2545,6 +2545,53 @@
       box-shadow: none !important;
     }
 
+
+    /* Force live category cards flat while preserving accent text */
+    .cat-card,
+    .cat-card.selected,
+    .category-list .cat-card,
+    #categoryList .cat-card {
+      background: #000000 !important;
+      background-image: none !important;
+      border: 1px solid #2f3336 !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      overflow: hidden !important;
+    }
+
+    body.light-mode .cat-card,
+    body.light-mode .cat-card.selected,
+    body.light-mode .category-list .cat-card,
+    body.light-mode #categoryList .cat-card {
+      background: #ffffff !important;
+      background-image: none !important;
+      border: 1px solid #cfd9de !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    .cat-card::before,
+    .cat-card::after,
+    .cat-card.selected::before,
+    .cat-card.selected::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+      background-image: none !important;
+      box-shadow: none !important;
+    }
+
+    .cat-card .cat-name,
+    .cat-card .count {
+      color: inherit;
+    }
+
+    .cat-card .trend {
+      color: var(--accent, #1d9bf0) !important;
+    }
+
 </style>
 </head>
 <body>
