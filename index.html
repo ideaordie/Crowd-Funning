@@ -938,6 +938,20 @@
       }
     }
 
+    
+    .section-icon.lightning-icon {
+      font-size: 20px;
+      font-weight: 1000;
+      transform: none;
+    }
+
+    .section-icon.progression-icon {
+      font-size: 17px;
+      letter-spacing: -2px;
+      padding-right: 2px;
+      font-weight: 1000;
+    }
+
     .section-icon-title {
       display: flex;
       align-items: center;
@@ -947,9 +961,12 @@
     .section-icon {
       width: 34px;
       height: 34px;
+      min-width: 34px;
+      min-height: 34px;
       border-radius: 13px;
-      display: grid;
-      place-items: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       color: var(--accent, #fff);
       background: var(--accent-soft, rgba(255,255,255,0.14));
       border: 1px solid var(--accent, #fff);
@@ -957,7 +974,9 @@
       font-size: 18px;
       font-weight: 900;
       line-height: 1;
-      flex: 0 0 auto;
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+      flex: 0 0 34px;
     }
 
     .option-mode-label {
@@ -1468,6 +1487,26 @@
   text-align: center;
 }
 
+
+    #progression:empty {
+      display: none;
+    }
+
+
+    #progression {
+      margin-top: 0 !important;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 0 !important;
+      display: none;
+    }
+
+    #progression.has-steps {
+      margin-top: 12px !important;
+      padding-right: 4px !important;
+      display: flex;
+    }
+
 </style>
 </head>
 <body>
@@ -1532,7 +1571,7 @@
           <section class="panel live-scene-panel">
             <div class="section-icon-title">
               <span class="section-icon">◉</span>
-              <h2 class="panel-title" style="margin:0;">Progression Preview</h2>
+              <h2 class="panel-title" style="margin:0;">Path Preview</h2>
             </div>
             <div class="progression-preview" id="progressionPreviewPanel">
               <div class="preview-text preview-empty" id="progressionPreviewText">Your progression preview will appear here after you commit a foundation.</div>
@@ -1555,8 +1594,8 @@
       <div class="row-grid directions-progression-row">
         <section class="panel" id="directionsPanel">
           <div class="section-icon-title">
-            <span class="section-icon">⌁</span>
-            <h2 class="panel-title" style="margin:0;">Available directions</h2>
+            <span class="section-icon lightning-icon">⌁</span>
+            <h2 class="panel-title" style="margin:0;">Available Paths</h2>
           </div>
           <section class="panel foundation-panel" id="foundationBox">
             <div class="section-icon-title">
@@ -1594,12 +1633,10 @@
 
         <section class="panel">
           <div class="section-icon-title">
-            <span class="section-icon">☷</span>
-            <h2 class="panel-title" style="margin:0;">Full progression</h2>
+            <span class="section-icon progression-icon">⋮⋮</span>
+            <h2 class="panel-title" style="margin:0;">Path Progression</h2>
           </div>
-          <div class="progression" id="progression" style="margin-top:12px;max-height:420px;overflow:auto;padding-right:4px;">
-            <div class="empty">Your selected path will appear here.</div>
-          </div>
+          <div class="progression" id="progression"></div>
         </section>
       </div>
     </section>
@@ -3173,8 +3210,11 @@ ${siteUrl}`;
     function renderProgression() {
       const box = document.getElementById("progression");
       const name = state.activeCategory;
+
+      box.classList.remove("has-steps");
+
       if (!name) {
-        box.innerHTML = `<div class="empty">Your selected path will appear here.</div>`;
+        box.innerHTML = "";
         return;
       }
 
@@ -3182,9 +3222,11 @@ ${siteUrl}`;
       const path = [...cat.progression];
 
       if (!path.length) {
-        box.innerHTML = `<div class="empty">No foundation selected yet. Submit a foundation, then choose from the trending options.</div>`;
+        box.innerHTML = "";
         return;
       }
+
+      box.classList.add("has-steps");
 
       box.innerHTML = path.map((entry, i) => {
         const text = entry.text || entry;
