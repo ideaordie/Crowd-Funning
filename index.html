@@ -2592,6 +2592,48 @@
       color: var(--accent, #1d9bf0) !important;
     }
 
+
+    /* Button readability and category title accent fix */
+    .primary,
+    button.primary,
+    #submitFoundationBtn,
+    #addPossibilityBtn {
+      color: var(--text, #e7e9ea) !important;
+      background: transparent !important;
+      border: 1px solid var(--line, #2f3336) !important;
+      text-shadow: none !important;
+    }
+
+    body.light-mode .primary,
+    body.light-mode button.primary,
+    body.light-mode #submitFoundationBtn,
+    body.light-mode #addPossibilityBtn {
+      color: #0f1419 !important;
+      background: #ffffff !important;
+      border: 1px solid #cfd9de !important;
+    }
+
+    body:not(.light-mode) .primary,
+    body:not(.light-mode) button.primary,
+    body:not(.light-mode) #submitFoundationBtn,
+    body:not(.light-mode) #addPossibilityBtn {
+      color: #e7e9ea !important;
+      background: #000000 !important;
+      border: 1px solid #2f3336 !important;
+    }
+
+    .primary:hover,
+    button.primary:hover,
+    #submitFoundationBtn:hover,
+    #addPossibilityBtn:hover {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+    }
+
+    .cat-card .cat-name {
+      color: var(--accent, #1d9bf0) !important;
+    }
+
 </style>
 </head>
 <body>
