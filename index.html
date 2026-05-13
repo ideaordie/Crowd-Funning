@@ -2498,6 +2498,53 @@
       box-shadow: none !important;
     }
 
+
+    /* Force individual category buttons to match flat panel styling */
+    .category-card,
+    .category-card.live,
+    button.category-card,
+    .category-list .category-card {
+      background: #000000 !important;
+      background-image: none !important;
+      border: 1px solid #2f3336 !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      overflow: hidden !important;
+    }
+
+    body.light-mode .category-card,
+    body.light-mode .category-card.live,
+    body.light-mode button.category-card,
+    body.light-mode .category-list .category-card {
+      background: #ffffff !important;
+      background-image: none !important;
+      border: 1px solid #cfd9de !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    body:not(.light-mode) .category-card,
+    body:not(.light-mode) .category-card.live,
+    body:not(.light-mode) button.category-card,
+    body:not(.light-mode) .category-list .category-card {
+      background: #000000 !important;
+      background-image: none !important;
+      border: 1px solid #2f3336 !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    .category-card::before,
+    .category-card::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
 </style>
 </head>
 <body>
