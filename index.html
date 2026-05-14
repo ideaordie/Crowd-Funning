@@ -5361,7 +5361,7 @@ ${siteUrl}`;
       } else if (cat.frontierOpen) {
         headline.textContent = `${name} UNLOCKED`;
         sub.textContent = (cat.submissionCount || 0) > 1
-          ? "The Frontier Panel is open. This entry has enough submissions to complete if COMPLETE reaches ${COMPLETION_THRESHOLD_PERCENT}%."
+          ? `The Frontier Panel is open. This entry has enough submissions to complete if COMPLETE reaches ${COMPLETION_THRESHOLD_PERCENT}%.`
           : "The Frontier Panel is open. At least 3 new path submissions are required before this entry can complete.";
       } else if (cat.phase === "foundation_submit") {
         headline.textContent = `${name} FOUNDATION NEEDED`;
