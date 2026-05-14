@@ -3437,6 +3437,47 @@
       color: #0f1419 !important;
     }
 
+
+    /* Normalize COMPLETION PROGRESS flag symbol appearance */
+    .flag,
+    .progress-flag,
+    #completionPanel .flag,
+    #completionPanel .section-icon,
+    #completionProgress .flag,
+    #completionProgress .section-icon {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 7px !important;
+      border: 1px solid var(--accent, #1d9bf0) !important;
+      background: transparent !important;
+      color: var(--accent, #1d9bf0) !important;
+      box-shadow: none !important;
+      line-height: 1 !important;
+    }
+
+    body.neutral-accent .flag,
+    body.neutral-accent .progress-flag,
+    body.neutral-accent #completionPanel .flag,
+    body.neutral-accent #completionProgress .flag {
+      border-color: #ffffff !important;
+      color: #ffffff !important;
+      background: transparent !important;
+    }
+
+    body.light-mode.neutral-accent .flag,
+    body.light-mode.neutral-accent .progress-flag,
+    body.light-mode.neutral-accent #completionPanel .flag,
+    body.light-mode.neutral-accent #completionProgress .flag {
+      border-color: #0f1419 !important;
+      color: #0f1419 !important;
+      background: transparent !important;
+    }
+
 </style>
 </head>
 <body class="neutral-accent">
