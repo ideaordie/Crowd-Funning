@@ -4254,6 +4254,11 @@
         cat.jokeFirstFoundationCommitted = false;
         cat.liveCurrentNodeId = null;
         cat.liveCurrentNodeKey = "ROOT";
+        cat.currentPathId = null;
+        cat.currentPathKey = "";
+        cat.submitVotes = 0;
+        cat.completeVotes = 0;
+        cat.pathStatus = "active";
       }
 
       saveState();
@@ -4577,6 +4582,14 @@
     async function voteCurrentProgressionPath(cat, voteType) {
       if (!cat || state.activeCategory !== "JOKE") return false;
 
+      if (!Array.isArray(cat.progression) || !cat.progression.length) {
+        console.warn("CROWD FUNNING: skipped path vote because no approved path has been committed yet.", {
+          voteType,
+          phase: cat.phase
+        });
+        return false;
+      }
+
       let userId = state.currentUserId;
 
       if (!userId) {
@@ -4847,6 +4860,11 @@
         cat.jokeFirstFoundationCommitted = false;
         cat.liveCurrentNodeId = null;
         cat.liveCurrentNodeKey = "ROOT";
+        cat.currentPathId = null;
+        cat.currentPathKey = "";
+        cat.submitVotes = 0;
+        cat.completeVotes = 0;
+        cat.pathStatus = "active";
         cat.preselectedOptionIndex = null;
         cat.preselectedDirectionId = null;
         cat.preselectedDirectionText = "";
@@ -5352,8 +5370,11 @@ ${siteUrl}`;
       }
 
       const cat = state.categories[name];
-      const totalFinishVotes = (cat.submitVotes || 0) + (cat.completeVotes || 0);
-      const completePct = totalFinishVotes ? Math.round(((cat.completeVotes || 0) / totalFinishVotes) * 100) : 0;
+      const hasCommittedPath = Array.isArray(cat.progression) && cat.progression.length > 0;
+      const shownSubmitVotes = hasCommittedPath ? (cat.submitVotes || 0) : 0;
+      const shownCompleteVotes = hasCommittedPath ? (cat.completeVotes || 0) : 0;
+      const totalFinishVotes = shownSubmitVotes + shownCompleteVotes;
+      const completePct = totalFinishVotes ? Math.round((shownCompleteVotes / totalFinishVotes) * 100) : 0;
 
       if (cat.completed) {
         headline.textContent = `${name} COMPLETE`;
@@ -5361,8 +5382,8 @@ ${siteUrl}`;
       } else if (cat.frontierOpen) {
         headline.textContent = `${name} UNLOCKED`;
         sub.textContent = (cat.submissionCount || 0) > 1
-          ? `The Frontier Panel is open. This entry has enough submissions to complete if COMPLETE reaches ${COMPLETION_THRESHOLD_PERCENT}%.`
-          : "The Frontier Panel is open. At least 3 new path submissions are required before this entry can complete.";
+          ? "The Frontier Panel is open. Submit a new path or vote to complete the category."
+          : "The Frontier Panel is open. Submit a new path or vote to complete the category.";
       } else if (cat.phase === "foundation_submit") {
         headline.textContent = `${name} FOUNDATION NEEDED`;
         sub.textContent = "Submit a possible beginning before reviewing trending foundations.";
