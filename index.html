@@ -4682,7 +4682,7 @@
               return;
             }
 
-            const { error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
+            const { data: submissionId, error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
               p_user_id: userId,
               p_entry_id: rootRows[0].entry_id,
               p_parent_node_id: rootRows[0].node_id,
@@ -4698,8 +4698,21 @@
               return;
             }
 
+            if (notificationRequest.wantsNotification) {
+              await storeSubmissionNotification({
+                submissionId,
+                submissionType: "foundation",
+                categorySlug: "joke",
+                pathId: null,
+                email: notificationRequest.email
+              });
+            }
+
             alert("Foundation submitted for review. If approved, it will appear in Trending Foundations.");
-            console.log("CROWD FUNNING: pending foundation submitted:", submittedText);
+            console.log("CROWD FUNNING: pending foundation submitted:", {
+              submissionId,
+              content: submittedText
+            });
           } catch (err) {
             console.error("CROWD FUNNING: unexpected pending foundation submission error:", err);
             alert("Foundation submission failed unexpectedly. Check the console for details.");
@@ -4898,6 +4911,16 @@
             console.error("CROWD FUNNING: pending Frontier submission failed:", submitError);
             alert("Frontier submission failed. Check the console for details.");
             return;
+          }
+
+          if (notificationRequest.wantsNotification) {
+            await storeSubmissionNotification({
+              submissionId,
+              submissionType: "frontier",
+              categorySlug: "joke",
+              pathId: cat.currentPathId || null,
+              email: notificationRequest.email
+            });
           }
 
           cat.submissionCount = (cat.submissionCount || 0) + 1;
@@ -5427,6 +5450,40 @@ ${siteUrl}`;
         email.value = "";
         email.classList.add("hidden");
       }
+    }
+
+    async function storeSubmissionNotification({
+      submissionId,
+      submissionType,
+      categorySlug,
+      pathId,
+      email
+    }) {
+      if (!submissionId || !email) return true;
+
+      const { error } = await crowdFunningSupabase.rpc("create_submission_notification", {
+        p_submission_id: submissionId,
+        p_submission_type: submissionType,
+        p_category_slug: categorySlug,
+        p_path_id: pathId || null,
+        p_email: email
+      });
+
+      if (error) {
+        console.error("CROWD FUNNING: notification storage failed:", error);
+        alert("Submission was saved, but notification signup failed. You can still continue.");
+        return false;
+      }
+
+      console.log("CROWD FUNNING: notification signup stored:", {
+        submissionId,
+        submissionType,
+        categorySlug,
+        pathId,
+        email
+      });
+
+      return true;
     }
 
     function updateCharCounters() {
