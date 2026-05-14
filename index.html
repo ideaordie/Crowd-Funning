@@ -3645,6 +3645,20 @@
       color: #ffffff !important;
     }
 
+
+    /* Force TRENDING icon to render as plain monochrome glyph */
+    .trending-icon {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-variant-emoji: text !important;
+      -webkit-text-fill-color: currentColor !important;
+      color: inherit !important;
+      background: transparent !important;
+      filter: none !important;
+      text-shadow: none !important;
+      font-size: 20px !important;
+      font-weight: 1000 !important;
+    }
+
 </style>
 </head>
 <body class="neutral-accent">
@@ -3799,7 +3813,7 @@
     <section id="trendingView" class="hidden">
       <div class="panel trending-panel">
         <div class="section-icon-title">
-          <span class="section-icon trending-icon">↗</span>
+          <span class="section-icon trending-icon">⤴</span>
           <h2 class="panel-title" style="margin:0;">Trending</h2>
         </div>
         <div class="instruction" style="margin-top:10px;">
