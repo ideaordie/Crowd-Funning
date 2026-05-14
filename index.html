@@ -3359,6 +3359,37 @@
       padding-bottom: 16px !important;
     }
 
+
+    /* Submit-new-path card for open expansion at every level */
+    .submit-new-path-card {
+      border-style: dashed !important;
+      cursor: pointer;
+      min-height: 128px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .submit-new-path-card .option-copy {
+      color: var(--accent, #1d9bf0) !important;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .submit-new-path-card .submit-new-path-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .submit-new-path-card:hover {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+      transform: translateY(-2px);
+    }
+
 </style>
 </head>
 <body>
@@ -3566,6 +3597,7 @@
     console.log("CROWD FUNNING: Supabase client ready");
 
     const STORAGE_KEY = "crowd_funning_prototype_v1_4_3";
+    const COMPLETION_THRESHOLD_PERCENT = 60;
 
     const COLORS = {
       JOKE: ["#ffd36a", "rgba(255,211,106,0.22)"],
@@ -4164,6 +4196,7 @@
         cat.preselectedDirectionId = null;
         cat.preselectedDirectionText = "";
         cat.preselectedOptionKey = null;
+        cat.frontierSubmitOpen = false;
         cat.jokeFirstFoundationCommitted = false;
         cat.liveCurrentNodeId = null;
         cat.liveCurrentNodeKey = "ROOT";
@@ -4267,7 +4300,11 @@
         options.innerHTML = `<div class="empty">${name} COMPLETE vote recorded. This completion attempt is closed for this session.</div>`;
       } else if (!cat.frontierOpen) {
         optionModeLabel.textContent = cat.phase === "foundation_select" ? "TRENDING FOUNDATIONS" : "NEXT AVAILABLE DIRECTIONS";
-        cat.options.forEach((opt, index) => {
+        const visibleOptions = cat.phase === "foundation_select"
+          ? cat.options
+          : cat.options.slice(0, 2);
+
+        visibleOptions.forEach((opt, index) => {
           const score = typeof opt.score === "number" ? opt.score : opt.up - opt.down;
           const shownUp = typeof opt.selectionCount === "number" ? opt.selectionCount : opt.up;
           const shownDown = typeof opt.selectionCount === "number" && typeof opt.score === "number"
@@ -4309,6 +4346,17 @@
           }
           options.appendChild(card);
         });
+
+        if (cat.phase !== "foundation_select") {
+          const submitCard = document.createElement("div");
+          submitCard.className = "option-card submit-new-path-card";
+          submitCard.innerHTML = `
+            <div class="option-copy">SUBMIT A NEW PATH</div>
+            <div class="submit-new-path-note">Don’t like these options? Add another possibility for this point in the path.</div>
+          `;
+          submitCard.addEventListener("click", () => openFrontierSubmission());
+          options.appendChild(submitCard);
+        }
       } else {
         options.innerHTML = `<div class="empty">No available paths remain. Add a new path possibility or vote to complete the ${name}.</div>`;
       }
@@ -4323,7 +4371,7 @@
         optionModeLabel.textContent = "";
       }
 
-      frontier.classList.toggle("show", !!cat.frontierOpen && !cat.completeVoteSubmitted);
+      frontier.classList.toggle("show", !!(cat.frontierOpen || cat.frontierSubmitOpen) && !cat.completeVoteSubmitted);
 
       const totalFinishVotes = cat.submitVotes + cat.completeVotes;
       const completePct = totalFinishVotes ? Math.round((cat.completeVotes / totalFinishVotes) * 100) : 0;
@@ -4334,16 +4382,34 @@
       completeBtn.disabled = !thresholdMet;
 
       if (thresholdNote) thresholdNote.textContent = thresholdMet
-        ? `${name} completion vote: ${completePct}% COMPLETE vs ${100 - completePct}% NEW DIRECTION. Completion requires 60% COMPLETE.`
+        ? `${name} completion vote: ${completePct}% COMPLETE vs ${100 - completePct}% NEW DIRECTION. Completion requires ${COMPLETION_THRESHOLD_PERCENT}% COMPLETE.`
         : `${name} COMPLETE unlocks when the preset available directions run out.`;
 
       renderProgression();
       renderCategoryProgress();
     }
 
+    function openFrontierSubmission() {
+      const cat = state.categories[state.activeCategory];
+      if (!cat || cat.completed) return;
+
+      cat.frontierSubmitOpen = true;
+      saveState();
+      renderAll();
+
+      requestAnimationFrame(() => {
+        const frontierBox = document.getElementById("frontierBox");
+        if (frontierBox) {
+          frontierBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
+    }
+
     async function chooseOption(index) {
       const cat = state.categories[state.activeCategory];
       if (!cat || cat.completed || cat.frontierOpen) return;
+
+      cat.frontierSubmitOpen = false;
 
       const selected = cat.options[index];
       if (!selected) return;
@@ -4580,6 +4646,7 @@
         cat.preselectedDirectionId = null;
         cat.preselectedDirectionText = "";
         cat.preselectedOptionKey = null;
+        cat.frontierSubmitOpen = false;
 
         await syncProgressionPath(cat);
 
@@ -4730,6 +4797,7 @@
         cat.preselectedDirectionId = null;
         cat.preselectedDirectionText = "";
         cat.preselectedOptionKey = null;
+        cat.frontierSubmitOpen = false;
 
         input.value = "";
         handleInput.value = "";
@@ -4929,6 +4997,7 @@
 
           input.value = "";
           handleInput.value = "";
+          cat.frontierSubmitOpen = false;
           resetNotificationRequest("frontier");
           updateCharCounters();
           saveState();
@@ -4996,7 +5065,7 @@
         const thresholdMet = cat.progression.length >= (cat.progressionThreshold || 4);
         const collaborationMet = (cat.submissionCount || 0) >= 3;
 
-        if (!thresholdMet || !collaborationMet || completePct < 60) {
+        if (!thresholdMet || !collaborationMet || completePct < COMPLETION_THRESHOLD_PERCENT) {
           cat.frontierOpen = false;
           cat.options = [];
           saveState();
@@ -5034,7 +5103,7 @@
       const thresholdMet = cat.progression.length >= (cat.progressionThreshold || 4);
       const collaborationMet = (cat.submissionCount || 0) >= 3;
 
-      if (!thresholdMet || !collaborationMet || completePct < 60) {
+      if (!thresholdMet || !collaborationMet || completePct < COMPLETION_THRESHOLD_PERCENT) {
         cat.frontierOpen = false;
         cat.options = [];
         saveState();
@@ -5238,7 +5307,7 @@ ${siteUrl}`;
       } else if (cat.frontierOpen) {
         headline.textContent = `${name} UNLOCKED`;
         sub.textContent = (cat.submissionCount || 0) > 1
-          ? "The Frontier Panel is open. This entry has enough submissions to complete if COMPLETE reaches 60%."
+          ? "The Frontier Panel is open. This entry has enough submissions to complete if COMPLETE reaches ${COMPLETION_THRESHOLD_PERCENT}%."
           : "The Frontier Panel is open. At least 3 new path submissions are required before this entry can complete.";
       } else if (cat.phase === "foundation_submit") {
         headline.textContent = `${name} FOUNDATION NEEDED`;
