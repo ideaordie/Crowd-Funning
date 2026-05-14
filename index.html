@@ -3478,6 +3478,29 @@
       background: transparent !important;
     }
 
+
+    /* DESTABILIZING is now a warning only, not a locked state */
+    .option-card.destabilizing {
+      opacity: 1 !important;
+      cursor: pointer !important;
+    }
+
+    .option-card.destabilizing:hover {
+      transform: translateY(-2px) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+    }
+
+    .option-card.dead {
+      opacity: 1 !important;
+      cursor: pointer !important;
+      transform: translateY(0) !important;
+    }
+
+    .option-card.dead:hover {
+      transform: translateY(-2px) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+    }
+
 </style>
 </head>
 <body class="neutral-accent">
@@ -4414,7 +4437,7 @@
           const canon = shownUp >= 35;
           const isPreselected = cat.preselectedOptionIndex === index;
           const card = document.createElement("div");
-          card.className = "option-card" + (collapsing ? " dead" : "") + (isPreselected ? " preselected" : "");
+          card.className = "option-card" + (collapsing ? " destabilizing" : "") + (isPreselected ? " preselected" : "");
           card.innerHTML = `
             <div class="option-copy">${opt.text}</div>
             ${attributionHtml(opt.originator)}
@@ -4434,15 +4457,13 @@
               </div>
             ` : ""}
           `;
-          if (!collapsing) {
-            card.addEventListener("click", () => chooseOption(index));
-            const commitBtn = card.querySelector(".commit-progression-btn");
-            if (commitBtn) {
-              commitBtn.addEventListener("click", event => {
-                event.stopPropagation();
-                commitPreselectedOption();
-              });
-            }
+          card.addEventListener("click", () => chooseOption(index));
+          const commitBtn = card.querySelector(".commit-progression-btn");
+          if (commitBtn) {
+            commitBtn.addEventListener("click", event => {
+              event.stopPropagation();
+              commitPreselectedOption();
+            });
           }
           options.appendChild(card);
         });
