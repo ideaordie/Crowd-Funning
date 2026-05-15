@@ -3787,6 +3787,180 @@
       }
     }
 
+
+    /* v1.7.29 CLEAN INTERACTION RESET
+       Keep functionality. Normalize visuals. Remove layered effects. */
+
+    .option-card,
+    .submit-new-path-card,
+    .trending-path-card,
+    .cat-card,
+    .category-card {
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      filter: none !important;
+      text-shadow: none !important;
+      transform: none !important;
+      border-radius: 7px !important;
+      border: 1px solid var(--line, #2f3336) !important;
+      opacity: 1 !important;
+      transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease !important;
+    }
+
+    body.light-mode .option-card,
+    body.light-mode .submit-new-path-card,
+    body.light-mode .trending-path-card,
+    body.light-mode .cat-card,
+    body.light-mode .category-card {
+      background: #ffffff !important;
+      border-color: #cfd9de !important;
+    }
+
+    body:not(.light-mode) .option-card,
+    body:not(.light-mode) .submit-new-path-card,
+    body:not(.light-mode) .trending-path-card,
+    body:not(.light-mode) .cat-card,
+    body:not(.light-mode) .category-card {
+      background: #000000 !important;
+      border-color: #2f3336 !important;
+    }
+
+    .option-card:hover,
+    .submit-new-path-card:hover,
+    .trending-path-card:hover,
+    .cat-card:hover,
+    .category-card:hover,
+    .option-card.preselected,
+    .submit-new-path-card.preselected {
+      border-color: var(--accent, #1d9bf0) !important;
+      box-shadow: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+
+    .option-card.preselected .option-copy,
+    .submit-new-path-card.preselected .option-copy,
+    .option-card:hover .option-copy,
+    .submit-new-path-card:hover .option-copy {
+      color: var(--accent, #1d9bf0) !important;
+    }
+
+    .option-card.dead,
+    .option-card.destabilizing {
+      opacity: 1 !important;
+      cursor: pointer !important;
+      transform: none !important;
+      filter: none !important;
+    }
+
+    .primary,
+    button.primary,
+    .nav-btn,
+    .appearance-btn,
+    .preview-action-btn,
+    .commit-progression-btn,
+    .card-complete-btn,
+    .trending-continue-btn,
+    #submitFoundationBtn,
+    #skipFoundationBtn,
+    #addPossibilityBtn,
+    #bottomResetBtn,
+    #themeToggleBtn,
+    #aboutBtn,
+    #homeBtn,
+    #trendingBtn,
+    #archiveBtn {
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      filter: none !important;
+      transform: none !important;
+      border-radius: 7px !important;
+      border: 1px solid var(--line, #2f3336) !important;
+      color: var(--text, #e7e9ea) !important;
+      opacity: 1 !important;
+      transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease !important;
+    }
+
+    body.light-mode .primary,
+    body.light-mode button.primary,
+    body.light-mode .nav-btn,
+    body.light-mode .appearance-btn,
+    body.light-mode .preview-action-btn,
+    body.light-mode .commit-progression-btn,
+    body.light-mode .card-complete-btn,
+    body.light-mode .trending-continue-btn {
+      background: #ffffff !important;
+      border-color: #cfd9de !important;
+      color: #0f1419 !important;
+    }
+
+    body:not(.light-mode) .primary,
+    body:not(.light-mode) button.primary,
+    body:not(.light-mode) .nav-btn,
+    body:not(.light-mode) .appearance-btn,
+    body:not(.light-mode) .preview-action-btn,
+    body:not(.light-mode) .commit-progression-btn,
+    body:not(.light-mode) .card-complete-btn,
+    body:not(.light-mode) .trending-continue-btn {
+      background: #000000 !important;
+      border-color: #2f3336 !important;
+      color: #ffffff !important;
+    }
+
+    .primary:hover,
+    button.primary:hover,
+    .nav-btn:hover,
+    .appearance-btn:hover,
+    .preview-action-btn:hover,
+    .commit-progression-btn:hover,
+    .card-complete-btn:hover,
+    .trending-continue-btn:hover,
+    .option-card.preselected .primary,
+    .option-card.preselected .commit-progression-btn,
+    .option-card.preselected .card-complete-btn {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .selected-pill,
+    .new-pill,
+    .collapse-pill,
+    .canon-pill {
+      background: transparent !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    .selected-pill {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+    }
+
+    .commit-card-action,
+    .card-action-row {
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+
+    @media (hover: none) {
+      .option-card:hover,
+      .submit-new-path-card:hover,
+      .primary:hover,
+      button.primary:hover,
+      .nav-btn:hover,
+      .appearance-btn:hover,
+      .preview-action-btn:hover {
+        transform: none !important;
+        box-shadow: none !important;
+      }
+    }
+
 </style>
 </head>
 <body class="neutral-accent">
