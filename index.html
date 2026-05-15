@@ -3740,6 +3740,39 @@
       max-width: none !important;
     }
 
+
+    /* Consistent mobile/desktop card selection behavior */
+    .option-card.preselected,
+    .option-card.submit-new-path-card.preselected {
+      border-color: var(--accent, #1d9bf0) !important;
+      box-shadow: none !important;
+      transform: translateY(-2px) !important;
+    }
+
+    .option-card.preselected .primary,
+    .option-card.preselected .commit-progression-btn,
+    .option-card.preselected .card-complete-btn {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+      background: transparent !important;
+    }
+
+    .option-card.preselected .selected-pill,
+    .option-card.submit-new-path-card.preselected .selected-pill {
+      color: var(--accent, #1d9bf0) !important;
+      border-color: var(--accent, #1d9bf0) !important;
+      background: transparent !important;
+    }
+
+    #options.submit-path-selected .option-card:not(.submit-new-path-card) {
+      display: none !important;
+    }
+
+    #options.submit-path-selected .submit-new-path-card {
+      border-color: var(--accent, #1d9bf0) !important;
+      transform: translateY(-2px) !important;
+    }
+
 </style>
 </head>
 <body class="neutral-accent">
@@ -4671,6 +4704,8 @@
         ? `Pick the strongest foundation. Your choice starts the progression and pressures the other foundations toward shedding.`
         : `Pick the strongest direction. Your choice upvotes it and pressures the others toward collapse.`;
 
+      options.classList.toggle("submit-path-selected", !!cat.frontierSubmitOpen);
+
       if (cat.completeVoteSubmitted && !cat.completed) {
         options.innerHTML = `<div class="empty">${name} COMPLETE vote recorded. This completion attempt is closed for this session.</div>`;
       } else if (!cat.frontierOpen) {
@@ -4734,10 +4769,11 @@
 
         if (cat.phase !== "foundation_select") {
           const submitCard = document.createElement("div");
-          submitCard.className = "option-card submit-new-path-card";
+          submitCard.className = "option-card submit-new-path-card" + (cat.frontierSubmitOpen ? " preselected" : "");
           submitCard.innerHTML = `
             <div class="option-copy">SUBMIT A NEW PATH</div>
             <div class="submit-new-path-note">Don’t like these options? Add another possibility for this point in the path.</div>
+            ${cat.frontierSubmitOpen ? `<span class="selected-pill">SELECTED</span>` : ""}
           `;
           submitCard.addEventListener("click", () => openFrontierSubmission());
           options.appendChild(submitCard);
