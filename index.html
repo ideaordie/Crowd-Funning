@@ -4699,7 +4699,7 @@
               <span>score ${score}</span>
             </div>
             ${opt.isNew ? `<span class="new-pill">NEW</span>` : ""}
-            ${isPreselected ? `<span class="selected-pill">SELECTED</span>` : ""}
+            
             ${collapsing ? `<span class="collapse-pill">DESTABILIZING</span>` : ""}
             ${canon ? `<span class="canon-pill">CANON PRESSURE</span>` : ""}
             ${isPreselected ? `
@@ -4738,7 +4738,7 @@
           submitCard.innerHTML = `
             <div class="option-copy">SUBMIT A NEW PATH</div>
             <div class="submit-new-path-note">Don’t like these options? Add another possibility for this point in the path.</div>
-            ${cat.frontierSubmitOpen ? `<span class="selected-pill">SELECTED</span>` : ""}
+            
           `;
           submitCard.addEventListener("click", () => openFrontierSubmission());
           options.appendChild(submitCard);
