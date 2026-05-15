@@ -3729,6 +3729,17 @@
       max-width: none !important;
     }
 
+
+    /* Full-width commit button when selected foundation card has only one action */
+    .card-action-row.single-action {
+      grid-template-columns: 1fr !important;
+    }
+
+    .card-action-row.single-action .commit-progression-btn {
+      width: 100% !important;
+      max-width: none !important;
+    }
+
 </style>
 </head>
 <body class="neutral-accent">
@@ -4693,7 +4704,7 @@
             ${canon ? `<span class="canon-pill">CANON PRESSURE</span>` : ""}
             ${isPreselected ? `
               <div class="commit-card-action">
-                <div class="card-action-row">
+                <div class="card-action-row ${cat.phase === "foundation_select" ? "single-action" : ""}">
                   <button class="primary commit-progression-btn" type="button">COMMIT TO PROGRESSION</button>
                   ${cat.phase !== "foundation_select" ? `<button class="primary card-complete-btn" type="button">${state.activeCategory || "CATEGORY"} COMPLETE</button>` : ""}
                 </div>
