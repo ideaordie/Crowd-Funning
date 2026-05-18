@@ -4536,9 +4536,7 @@
         .map(name => state.categories[name])
         .filter(Boolean);
 
-      const sortedCategories = state.activeCategory
-        ? [...categoryArray].sort((a, b) => a.name === state.activeCategory ? -1 : b.name === state.activeCategory ? 1 : 0)
-        : categoryArray;
+      const sortedCategories = categoryArray;
 
       sortedCategories.forEach(cat => {
         const card = document.createElement("div");
@@ -7261,6 +7259,27 @@ ${siteUrl}`;
     body.light-mode #categoryPanel.edge-right-active::after {
       background: linear-gradient(270deg, rgba(255,255,255,0.95), transparent);
     }
+  }
+</style>
+
+
+<style id="v1-8-4-category-true-left-start-fix">
+  /* Force category carousel to preserve true left start: JOKE first */
+  #categoryPanel {
+    direction: ltr !important;
+  }
+
+  #categoryList {
+    direction: ltr !important;
+    justify-content: flex-start !important;
+    align-content: flex-start !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    scroll-padding-left: 0 !important;
+  }
+
+  #categoryList .cat-card {
+    order: 0 !important;
   }
 </style>
 
