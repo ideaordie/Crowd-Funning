@@ -4788,7 +4788,7 @@
           options.appendChild(submitCard);
         }
       } else {
-        options.innerHTML = `<div class="empty">No available paths remain. Add a new path possibility or vote to complete the ${name}.</div>`;
+        options.innerHTML = `<div class="empty">No available paths remain. Add a new path possibility.</div>`;
       }
 
       if (cat.frontierOpen) {
@@ -5813,8 +5813,8 @@ ${siteUrl}`;
       } else if (cat.frontierOpen) {
         headline.textContent = `${name} UNLOCKED`;
         sub.textContent = (cat.submissionCount || 0) > 1
-          ? "The Frontier Panel is open. Submit a new path or vote to complete the category."
-          : "The Frontier Panel is open. Submit a new path or vote to complete the category.";
+          ? "The FRONTIER panel is open below."
+          : "The FRONTIER panel is open below.";
       } else if (cat.phase === "foundation_submit") {
         headline.textContent = `${name} FOUNDATION NEEDED`;
         sub.textContent = "Submit a possible beginning before reviewing trending foundations.";
