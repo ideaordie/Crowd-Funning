@@ -4813,7 +4813,7 @@
       completeBtn.disabled = !completionVoteUnlocked;
 
       if (thresholdNote) thresholdNote.textContent = completionVoteUnlocked
-        ? `${name} completion vote: ${completePct}% COMPLETE vs ${100 - completePct}% NEW PATH. Completion requires ${COMPLETION_THRESHOLD_PERCENT}% COMPLETE and at least ${MIN_COMPLETE_VOTES_TO_COMPLETE} COMPLETE votes.`
+        ? `${name} completion vote: ${Math.round(completePct)}% COMPLETE vs ${100 - completePct}% NEW PATH. Completion requires ${COMPLETION_THRESHOLD_PERCENT}% COMPLETE and at least ${MIN_COMPLETE_VOTES_TO_COMPLETE} COMPLETE votes.`
         : `${name} COMPLETE unlocks after an approved path begins.`;
 
       renderProgression();
@@ -5826,7 +5826,7 @@ ${siteUrl}`;
         sub.textContent = `${cat.progression.length} progression step${cat.progression.length === 1 ? "" : "s"} selected.`;
       }
 
-      label.textContent = `${completePct}% COMPLETE`;
+      label.textContent = `${Math.round(completePct)}% COMPLETE`;
       bar.style.width = `${Math.min(100, completePct)}%`;
       submitMeter.textContent = (cat.submitVotes || 0).toLocaleString();
       completeMeter.textContent = (cat.completeVotes || 0).toLocaleString();
@@ -6119,7 +6119,7 @@ ${siteUrl}`;
             card.innerHTML = `
               <div class="trending-foundation-text">${getTrendingPathFoundationText(path)}</div>
               <div class="trending-card-footer">
-                <div class="trending-status">${completePct}% COMPLETE · ${stepCount} STEP${stepCount === 1 ? "" : "S"} · PATH ${index + 1}</div>
+                <div class="trending-status">${Math.round(completePct)}% COMPLETE · ${stepCount} STEP${stepCount === 1 ? "" : "S"} · PATH ${index + 1}</div>
                 <button class="primary trending-continue-btn" type="button">CONTINUE</button>
               </div>
             `;
@@ -6793,6 +6793,32 @@ ${siteUrl}`;
   body.light-mode .categories button {
     background: #ffffff !important;
     background-image: none !important;
+  }
+</style>
+
+
+<style id="v1-7-43-category-container-background-fix">
+  /* Category button container should match page background */
+  body:not(.light-mode) .category-selector-panel,
+  body:not(.light-mode) .categories-panel,
+  body:not(.light-mode) .category-grid,
+  body:not(.light-mode) .categories,
+  body:not(.light-mode) #categoriesPanel {
+    background: #000000 !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  body.light-mode .category-selector-panel,
+  body.light-mode .categories-panel,
+  body.light-mode .category-grid,
+  body.light-mode .categories,
+  body.light-mode #categoriesPanel {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 </style>
 
