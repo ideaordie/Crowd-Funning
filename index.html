@@ -6461,6 +6461,34 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-7-32-card-action-button-final-behavior">
+  /* Final override: simple behavior for card action buttons only */
+  body .options .option-card .commit-progression-btn,
+  body .options .option-card .card-complete-btn {
+    transition:
+      color 0.14s ease,
+      border-color 0.14s ease,
+      background-color 0.14s ease,
+      transform 0.14s ease !important;
+  }
+
+  body .options .option-card .commit-progression-btn:hover,
+  body .options .option-card .card-complete-btn:hover,
+  body .options .option-card.preselected .commit-progression-btn,
+  body .options .option-card.preselected .card-complete-btn {
+    color: var(--accent, #1d9bf0) !important;
+    border-color: var(--accent, #1d9bf0) !important;
+    background: transparent !important;
+    transform: translateY(-1px) !important;
+  }
+
+  body .options .option-card .commit-progression-btn:active,
+  body .options .option-card .card-complete-btn:active {
+    transform: translateY(1px) !important;
+  }
+</style>
+
 </body>
 </html>
 
