@@ -6770,6 +6770,32 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-7-42-panel-brightness-category-light-fix">
+  /* Slightly brighter DARK mode panels */
+  body:not(.light-mode) .panel,
+  body:not(.light-mode) .category-panel,
+  body:not(.light-mode) .category-progress-card,
+  body:not(.light-mode) #directionsPanel,
+  body:not(.light-mode) #foundationBox,
+  body:not(.light-mode) #frontierBox,
+  body:not(.light-mode) #progression,
+  body:not(.light-mode) .trending-path-card,
+  body:not(.light-mode) .trending-category-block {
+    background: #111111 !important;
+  }
+
+  /* Remove gray fill ONLY from category buttons in LIGHT mode */
+  body.light-mode .category-card,
+  body.light-mode .cat-card,
+  body.light-mode .category-button,
+  body.light-mode .category-grid button,
+  body.light-mode .categories button {
+    background: #ffffff !important;
+    background-image: none !important;
+  }
+</style>
+
 </body>
 </html>
 
