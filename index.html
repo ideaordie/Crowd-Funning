@@ -5117,6 +5117,10 @@
         if (!loaded) {
           cat.options = [];
           cat.frontierOpen = true;
+          cat.liveEntry = cat.liveEntry || {
+            entryId: path.entry_id || null,
+            nodeId: lastItem ? (lastItem.parentNodeId || lastItem.nextNodeId || null) : null
+          };
         }
 
         saveState();
@@ -5421,8 +5425,20 @@
             return false;
           }
 
+          const entryId = cat.liveEntry && cat.liveEntry.entryId;
+
+          if (!entryId) {
+            console.error("CROWD FUNNING: missing entry id for Frontier submission.", {
+              liveEntry: cat.liveEntry,
+              currentPathId: cat.currentPathId,
+              cat
+            });
+            alert("Frontier submission failed. Entry context was not found.");
+            return false;
+          }
+
           const { data: nodeId, error: nodeError } = await crowdFunningSupabase.rpc("ensure_node_for_committed_direction", {
-            p_entry_id: cat.liveEntry.entryId,
+            p_entry_id: entryId,
             p_parent_node_id: committedParentNodeId,
             p_direction_id: committedDirectionId,
             p_node_key: committedOptionKey,
@@ -5439,7 +5455,7 @@
 
           const { data: submissionId, error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
             p_user_id: userId,
-            p_entry_id: cat.liveEntry.entryId,
+            p_entry_id: entryId,
             p_parent_node_id: nodeId,
             p_content: result.text,
             p_submission_type: "frontier",
@@ -6022,7 +6038,10 @@ ${siteUrl}`;
       cat.frontierOpen = false;
       cat.frontierSubmitOpen = false;
       cat.liveLoading = false;
-      cat.liveEntry = null;
+      cat.liveEntry = {
+        entryId: path.entry_id || null,
+        nodeId: lastItem ? (lastItem.parentNodeId || lastItem.nextNodeId || null) : null
+      };
       cat.options = [];
       cat.preselectedOptionIndex = null;
       cat.preselectedDirectionId = null;
