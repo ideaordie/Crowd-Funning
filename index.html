@@ -4487,6 +4487,45 @@
       categoryHoverScrollFrame = requestAnimationFrame(tick);
     }
 
+    function startCategoryMouseEdgeScroll(direction) {
+      const panel = document.getElementById("categoryPanel");
+      const list = document.getElementById("categoryList");
+      if (!panel || !list || window.innerWidth < 700) return;
+
+      panel.classList.toggle("edge-left-active", direction < 0);
+      panel.classList.toggle("edge-right-active", direction > 0);
+      startCategoryHoverScroll(direction);
+    }
+
+    function handleCategoryPanelMouseMove(event) {
+      const panel = document.getElementById("categoryPanel");
+      const list = document.getElementById("categoryList");
+      if (!panel || !list || window.innerWidth < 700) return;
+
+      const rect = panel.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const edgeSize = Math.min(150, Math.max(100, rect.width * 0.16));
+
+      if (x <= edgeSize) {
+        startCategoryMouseEdgeScroll(-1);
+        return;
+      }
+
+      if (x >= rect.width - edgeSize) {
+        startCategoryMouseEdgeScroll(1);
+        return;
+      }
+
+      panel.classList.remove("edge-left-active", "edge-right-active");
+      stopCategoryHoverScroll();
+    }
+
+    function resetCategoryScrollToStart() {
+      const list = document.getElementById("categoryList");
+      if (!list) return;
+      list.scrollLeft = 0;
+    }
+
     function renderCategories() {
       const list = document.getElementById("categoryList");
       const panel = document.getElementById("categoryPanel");
@@ -4521,6 +4560,8 @@
         card.addEventListener("click", () => selectCategory(cat.name));
         list.appendChild(card);
       });
+
+      requestAnimationFrame(resetCategoryScrollToStart);
     }
 
 
@@ -6421,7 +6462,11 @@ ${siteUrl}`;
     }
 
     if (categoryPanelElement) {
-      categoryPanelElement.addEventListener("mouseleave", stopCategoryHoverScroll);
+      categoryPanelElement.addEventListener("mousemove", handleCategoryPanelMouseMove);
+      categoryPanelElement.addEventListener("mouseleave", () => {
+        categoryPanelElement.classList.remove("edge-left-active", "edge-right-active");
+        stopCategoryHoverScroll();
+      });
     }
 
     window.addEventListener("blur", stopCategoryHoverScroll);
@@ -7167,6 +7212,54 @@ ${siteUrl}`;
     #categoryPanel.hover-scroll-right::after {
       width: 110px !important;
       z-index: 70 !important;
+    }
+  }
+</style>
+
+
+<style id="v1-8-3-category-mouse-edge-scroll-fix">
+  #categoryPanel {
+    overflow: visible !important;
+  }
+
+  #categoryList {
+    scroll-padding-left: 0 !important;
+    scroll-margin-left: 0 !important;
+  }
+
+  @media (min-width: 700px) {
+    #categoryPanel {
+      cursor: default !important;
+    }
+
+    #categoryPanel.edge-left-active::before,
+    #categoryPanel.edge-right-active::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 128px;
+      z-index: 60;
+      pointer-events: none;
+      opacity: 0.28;
+    }
+
+    #categoryPanel.edge-left-active::before {
+      left: 0;
+      background: linear-gradient(90deg, rgba(0,0,0,0.7), transparent);
+    }
+
+    #categoryPanel.edge-right-active::after {
+      right: 0;
+      background: linear-gradient(270deg, rgba(0,0,0,0.7), transparent);
+    }
+
+    body.light-mode #categoryPanel.edge-left-active::before {
+      background: linear-gradient(90deg, rgba(255,255,255,0.95), transparent);
+    }
+
+    body.light-mode #categoryPanel.edge-right-active::after {
+      background: linear-gradient(270deg, rgba(255,255,255,0.95), transparent);
     }
   }
 </style>
