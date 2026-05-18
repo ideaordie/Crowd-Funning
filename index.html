@@ -7260,6 +7260,85 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-8-4-category-arrow-exact-height-fix">
+  /* Force arrows, category strip, and category buttons into one equal-height row */
+  #categoryPanel {
+    --category-row-height: 96px;
+    display: grid !important;
+    grid-template-columns: 30px minmax(0, 1fr) 30px !important;
+    grid-auto-rows: var(--category-row-height) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  #categoryList {
+    height: var(--category-row-height) !important;
+    min-height: var(--category-row-height) !important;
+    max-height: var(--category-row-height) !important;
+    display: flex !important;
+    align-items: stretch !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  #categoryList .cat-card {
+    height: var(--category-row-height) !important;
+    min-height: var(--category-row-height) !important;
+    max-height: var(--category-row-height) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .category-scroll-btn {
+    height: var(--category-row-height) !important;
+    min-height: var(--category-row-height) !important;
+    max-height: var(--category-row-height) !important;
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    place-items: center !important;
+    text-align: center !important;
+    padding: 0 !important;
+    font-size: 38px !important;
+    font-weight: 1000 !important;
+    line-height: 1 !important;
+  }
+
+  @media (max-width: 699px) {
+    #categoryPanel {
+      --category-row-height: 96px;
+      grid-template-columns: 28px minmax(0, 1fr) 28px !important;
+      gap: 6px !important;
+    }
+
+    .category-scroll-btn {
+      font-size: 34px !important;
+    }
+  }
+
+  #categoryPanel.compact {
+    --category-row-height: 44px;
+  }
+
+  #categoryPanel.compact #categoryList {
+    height: var(--category-row-height) !important;
+    min-height: var(--category-row-height) !important;
+    max-height: var(--category-row-height) !important;
+  }
+
+  #categoryPanel.compact #categoryList .cat-card,
+  #categoryPanel.compact .category-scroll-btn {
+    height: var(--category-row-height) !important;
+    min-height: var(--category-row-height) !important;
+    max-height: var(--category-row-height) !important;
+  }
+</style>
+
 </body>
 </html>
 
