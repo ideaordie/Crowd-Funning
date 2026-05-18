@@ -5329,11 +5329,37 @@
               return;
             }
 
+            const categorySlug = getCategorySlug(state.activeCategory);
+
+            const { data: categoryRows, error: categoryError } = await crowdFunningSupabase
+              .from("categories")
+              .select("id")
+              .eq("slug", categorySlug)
+              .limit(1);
+
+            if (categoryError || !categoryRows || !categoryRows.length) {
+              console.error("CROWD FUNNING: could not find category for foundation submission.", categoryError);
+              alert("Foundation submission failed. Category was not found.");
+              return;
+            }
+
+            const { data: entryRows, error: entryError } = await crowdFunningSupabase
+              .from("entries")
+              .select("id")
+              .eq("category_id", categoryRows[0].id)
+              .eq("status", "active")
+              .limit(1);
+
+            if (entryError || !entryRows || !entryRows.length) {
+              console.error("CROWD FUNNING: could not find active entry for foundation submission.", entryError);
+              alert("Foundation submission failed. Active category entry was not found.");
+              return;
+            }
+
             const { data: rootRows, error: rootError } = await crowdFunningSupabase
-              .from("active_entry_directions")
-              .select("entry_id,node_id")
-              .eq("category_slug", getCategorySlug(state.activeCategory))
-              .eq("direction_type", "foundation")
+              .from("nodes")
+              .select("id")
+              .eq("entry_id", entryRows[0].id)
               .eq("node_key", "ROOT")
               .limit(1);
 
@@ -5345,8 +5371,8 @@
 
             const { data: submissionId, error: submitError } = await crowdFunningSupabase.rpc("create_pending_submission", {
               p_user_id: userId,
-              p_entry_id: rootRows[0].entry_id,
-              p_parent_node_id: rootRows[0].node_id,
+              p_entry_id: entryRows[0].id,
+              p_parent_node_id: rootRows[0].id,
               p_content: submittedText,
               p_submission_type: "foundation",
               p_direction_type: "foundation",
