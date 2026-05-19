@@ -5292,7 +5292,8 @@
       let submittedHandle = "";
 
       if (!skipOnly) {
-        submittedHandle = normalizeHandle(handleInput.value) || "Anonymous";
+        submittedHandle = validateSubmissionAttribution(handleInput);
+        if (!submittedHandle) return;
 
         const result = moderateInput(input.value);
         if (!result.ok) {
@@ -5307,11 +5308,13 @@
       if (state.activeCategory) {
         if (submittedText) {
           const notificationRequest = getNotificationRequest("foundation");
-          if (notificationRequest.wantsNotification && !notificationRequest.email) {
-            alert("Enter an email address for notifications, or uncheck Notify me.");
+          const notificationCheck = validateNotificationRequest("foundation");
+          if (!notificationCheck.ok) {
+            alert(notificationCheck.reason);
             return;
           }
           if (notificationRequest.wantsNotification) {
+            notificationRequest.email = notificationCheck.email;
             console.log("CROWD FUNNING: foundation notification requested:", notificationRequest.email);
           }
 
@@ -5483,12 +5486,117 @@
       return loaded;
     }
 
+    const BLOCKED_EMAIL_DOMAINS = new Set([
+      "mailinator.com",
+      "10minutemail.com",
+      "guerrillamail.com",
+      "tempmail.com",
+      "throwawaymail.com",
+      "yopmail.com",
+      "trashmail.com",
+      "fakeinbox.com",
+      "sharklasers.com"
+    ]);
+
+    function validateEmailAddress(email) {
+      const value = String(email || "").trim().toLowerCase();
+
+      if (!value) return { ok: true, value: "" };
+
+      if (value.length > 254) {
+        return { ok: false, reason: "Email address is too long." };
+      }
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+      if (!emailPattern.test(value)) {
+        return { ok: false, reason: "Enter a valid email address." };
+      }
+
+      const domain = value.split("@").pop();
+
+      if (BLOCKED_EMAIL_DOMAINS.has(domain)) {
+        return { ok: false, reason: "Please use a non-temporary email address." };
+      }
+
+      if (/(\.{2,}|-{3,}|_{3,})/.test(value)) {
+        return { ok: false, reason: "Email address looks unusual. Please check it." };
+      }
+
+      return { ok: true, value };
+    }
+
+    function validateXHandle(rawHandle) {
+      const raw = String(rawHandle || "").trim();
+
+      if (!raw) return { ok: true, value: "" };
+
+      const value = raw.startsWith("@") ? raw.slice(1) : raw;
+
+      if (value.length < 2 || value.length > 15) {
+        return { ok: false, reason: "X handle must be 2–15 characters." };
+      }
+
+      if (!/^[A-Za-z0-9_]+$/.test(value)) {
+        return { ok: false, reason: "X handle can only contain letters, numbers, and underscores." };
+      }
+
+      if (/^_+$/.test(value) || /^\d+$/.test(value)) {
+        return { ok: false, reason: "X handle looks invalid." };
+      }
+
+      if (/(.)\1{5,}/.test(value)) {
+        return { ok: false, reason: "X handle looks spammy." };
+      }
+
+      const lower = value.toLowerCase();
+      const blocked = ["admin", "support", "official", "twitter", "x", "elonmusk"];
+
+      if (blocked.includes(lower)) {
+        return { ok: false, reason: "Please use your own X handle." };
+      }
+
+      return { ok: true, value: "@" + value };
+    }
+
+    function validateNotificationRequest(type) {
+      const request = getNotificationRequest(type);
+
+      if (!request.wantsNotification) {
+        return { ok: true, email: "" };
+      }
+
+      const emailCheck = validateEmailAddress(request.email);
+
+      if (!emailCheck.ok) {
+        return emailCheck;
+      }
+
+      if (!emailCheck.value) {
+        return { ok: false, reason: "Enter an email address for notifications, or uncheck Notify me." };
+      }
+
+      return { ok: true, email: emailCheck.value };
+    }
+
+    function validateSubmissionAttribution(handleInput) {
+      const check = validateXHandle(handleInput && handleInput.value);
+
+      if (!check.ok) {
+        alert(check.reason);
+        return null;
+      }
+
+      return check.value || "Anonymous";
+    }
+
     function moderateInput(text) {
       const cleaned = text.trim().replace(/\s+/g, " ");
-      const banned = ["kill yourself", "dox", "address", "http://", "https://", "www.", "@", "#"];
+      const banned = ["kill yourself", "dox", "address", "http://", "https://", "www.", ".com", ".net", ".org", "@", "#"];
       if (cleaned.length < 10) return { ok: false, reason: "Add a little more detail." };
       if (cleaned.length > 170) return { ok: false, reason: "Keep it shorter." };
-      if (/(.)\1{8,}/.test(cleaned)) return { ok: false, reason: "Avoid spammy repeated characters." };
+      if (/(.)\1{6,}/.test(cleaned)) return { ok: false, reason: "Avoid spammy repeated characters." };
+      if (/\b(buy now|free money|crypto giveaway|click here|promo code)\b/i.test(cleaned)) return { ok: false, reason: "Avoid promotional or spam-like text." };
       if (banned.some(b => cleaned.toLowerCase().includes(b))) return { ok: false, reason: "This prototype blocks links, handles, targeting, and unsafe patterns." };
       return { ok: true, text: cleaned };
     }
@@ -5501,7 +5609,8 @@
 
       if (!cat || cat.completed) return;
 
-      const submittedHandle = normalizeHandle(handleInput.value) || "Anonymous";
+      const submittedHandle = validateSubmissionAttribution(handleInput);
+      if (!submittedHandle) return false;
 
       const result = moderateInput(input.value);
       if (!result.ok) {
@@ -5511,11 +5620,13 @@
 
       if (state.activeCategory) {
         const notificationRequest = getNotificationRequest("frontier");
-        if (notificationRequest.wantsNotification && !notificationRequest.email) {
-          alert("Enter an email address for notifications, or uncheck Notify me.");
-          return;
+        const notificationCheck = validateNotificationRequest("frontier");
+        if (!notificationCheck.ok) {
+          alert(notificationCheck.reason);
+          return false;
         }
         if (notificationRequest.wantsNotification) {
+          notificationRequest.email = notificationCheck.email;
           console.log("CROWD FUNNING: frontier notification requested:", notificationRequest.email);
         }
 
