@@ -3918,22 +3918,55 @@
     <section id="archiveView" class="hidden">
       <div class="panel">
         <h2 class="panel-title">COMPLETED</h2>
-        <div class="archive-controls archive-control-stack">
+        <div class="archive-controls">
           <input class="archive-search" id="archiveSearch" placeholder="Search completed paths..." />
-          <div class="archive-select-row">
-            <label class="archive-select-wrap" aria-label="Category filter">
-              <span>CATEGORY</span>
+
+          <div class="archive-dropdown-row">
+            <label class="archive-select-wrap">
+              <span>Category</span>
               <select id="archiveCategorySelect" class="archive-select">
-                <option value="ALL">ALL CATEGORIES</option>
+                <option value="ALL">ALL</option>
               </select>
             </label>
-            <label class="archive-select-wrap" aria-label="Sort completed paths">
-              <span>SORT</span>
+
+            <label class="archive-select-wrap">
+              <span>Sort</span>
               <select id="archiveSortSelect" class="archive-select">
-                <option value="newest">NEWEST</option>
-                <option value="most_votes">MOST VOTES</option>
-                <option value="complete_votes">MOST COMPLETE VOTES</option>
-                <option value="controversial">MOST CONTROVERSIAL</option>
+                <option value="NEWEST">NEWEST</option>
+                <option value="HIGH_SCORE">HIGH SCORE</option>
+                <option value="MOST_COMPLETED">MOST COMPLETED</option>
+                <option value="MOST_CONTROVERSIAL">MOST CONTROVERSIAL</option>
+                <option value="LONGEST">LONGEST</option>
+                <option value="SHORTEST">SHORTEST</option>
+                <option value="FASTEST_COMPLETE">FASTEST COMPLETE</option>
+                <option value="MOST_REMIXED">MOST REMIXED</option>
+                <option value="MOST_VIEWED">MOST VIEWED</option>
+                <option value="TRENDING_COMPLETE">TRENDING COMPLETE</option>
+              </select>
+            </label>
+
+            <label class="archive-select-wrap">
+              <span>Vibe</span>
+              <select id="archiveVibeSelect" class="archive-select">
+                <option value="ALL">ALL</option>
+                <option value="FUNNY">FUNNY</option>
+                <option value="DARK">DARK</option>
+                <option value="WHOLESOME">WHOLESOME</option>
+                <option value="CHAOTIC">CHAOTIC</option>
+                <option value="CLEVER">CLEVER</option>
+                <option value="ABSURD">ABSURD</option>
+                <option value="CURSED">CURSED</option>
+                <option value="EXPLICIT">EXPLICIT</option>
+              </select>
+            </label>
+
+            <label class="archive-select-wrap">
+              <span>Intensity</span>
+              <select id="archiveIntensitySelect" class="archive-select">
+                <option value="ALL">ALL</option>
+                <option value="MILD">MILD</option>
+                <option value="WILD">WILD</option>
+                <option value="UNHINGED">UNHINGED</option>
               </select>
             </label>
           </div>
@@ -4182,8 +4215,11 @@
 
     let state = loadState();
     let archiveFilter = "ALL";
-    let archiveSort = "newest";
     let archiveSearch = "";
+    let archiveCategoryFilter = "ALL";
+    let archiveSortMode = "NEWEST";
+    let archiveVibeFilter = "ALL";
+    let archiveIntensityFilter = "ALL";
     let trendingPaths = [];
 
 
@@ -6285,74 +6321,98 @@ ${siteUrl}`;
         : generateCompletedName(item.name, item.progression);
     }
 
-    function sortCompletedItems(items) {
-      const list = [...items];
-
-      if (archiveSort === "most_votes") {
-        return list.sort((a, b) => Number(b.selections || 0) - Number(a.selections || 0));
-      }
-
-      if (archiveSort === "complete_votes") {
-        return list.sort((a, b) => {
-          const aVotes = Math.round((Number(a.completionShare || 0) / 100) * Number(a.selections || 0));
-          const bVotes = Math.round((Number(b.completionShare || 0) / 100) * Number(b.selections || 0));
-          return bVotes - aVotes;
-        });
-      }
-
-      if (archiveSort === "controversial") {
-        return list.sort((a, b) => {
-          const aDistance = Math.abs(Number(a.completionShare || 0) - 50);
-          const bDistance = Math.abs(Number(b.completionShare || 0) - 50);
-          const aWeight = Number(a.selections || 0) - aDistance;
-          const bWeight = Number(b.selections || 0) - bDistance;
-          return bWeight - aWeight;
-        });
-      }
-
-      return list.sort((a, b) => {
-        const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
-        const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
-        return bTime - aTime;
-      });
-    }
-
-    function setupArchiveControls() {
+    function setupArchiveDropdowns() {
       const categorySelect = document.getElementById("archiveCategorySelect");
       const sortSelect = document.getElementById("archiveSortSelect");
+      const vibeSelect = document.getElementById("archiveVibeSelect");
+      const intensitySelect = document.getElementById("archiveIntensitySelect");
 
       if (categorySelect) {
         const categories = ["ALL", ...(state.categoryOrder || Object.keys(state.categories || SEEDS))];
-        categorySelect.innerHTML = categories.map(name => {
-          const label = name === "ALL" ? "ALL CATEGORIES" : name;
-          return `<option value="${name}">${label}</option>`;
-        }).join("");
+        const current = archiveCategoryFilter || "ALL";
 
-        categorySelect.value = archiveFilter || "ALL";
+        categorySelect.innerHTML = categories.map(name => `
+          <option value="${name}" ${name === current ? "selected" : ""}>${name}</option>
+        `).join("");
+
         categorySelect.onchange = () => {
-          archiveFilter = categorySelect.value || "ALL";
-          setAccent(archiveFilter === "ALL" ? (state.activeCategory || "JOKE") : archiveFilter);
+          archiveCategoryFilter = categorySelect.value || "ALL";
           renderArchive();
         };
       }
 
       if (sortSelect) {
-        sortSelect.value = archiveSort || "newest";
+        sortSelect.value = archiveSortMode || "NEWEST";
         sortSelect.onchange = () => {
-          archiveSort = sortSelect.value || "newest";
+          archiveSortMode = sortSelect.value || "NEWEST";
+          renderArchive();
+        };
+      }
+
+      if (vibeSelect) {
+        vibeSelect.value = archiveVibeFilter || "ALL";
+        vibeSelect.onchange = () => {
+          archiveVibeFilter = vibeSelect.value || "ALL";
+          renderArchive();
+        };
+      }
+
+      if (intensitySelect) {
+        intensitySelect.value = archiveIntensityFilter || "ALL";
+        intensitySelect.onchange = () => {
+          archiveIntensityFilter = intensitySelect.value || "ALL";
           renderArchive();
         };
       }
     }
 
+    function getArchiveSortValue(item, mode) {
+      const totalVotes = Number(item.selections || 0);
+      const completeVotes = Number(item.completeVotes || item.complete_votes || 0);
+      const newPathVotes = Number(item.newPathVotes || item.new_path_votes || 0);
+      const completionShare = Number(item.completionShare || 0);
+      const stepCount = Array.isArray(item.progression) ? item.progression.length : Number(item.submissionCount || 0);
+      const foundationScore = Number(item.foundationScore || item.foundation_score || 0);
+      const completedAt = item.completedAt ? new Date(item.completedAt).getTime() : 0;
+
+      switch (mode) {
+        case "HIGH_SCORE":
+          return foundationScore;
+        case "MOST_COMPLETED":
+          return completeVotes;
+        case "MOST_CONTROVERSIAL":
+          return totalVotes * (100 - Math.abs(50 - completionShare));
+        case "LONGEST":
+          return stepCount;
+        case "SHORTEST":
+          return -stepCount;
+        case "FASTEST_COMPLETE":
+          return Number(item.fastestCompleteScore || item.fastest_complete_score || 0);
+        case "MOST_REMIXED":
+          return Number(item.remixCount || item.remix_count || newPathVotes || 0);
+        case "MOST_VIEWED":
+          return Number(item.viewCount || item.view_count || 0);
+        case "TRENDING_COMPLETE":
+          return Number(item.trendingCompleteScore || item.trending_complete_score || 0);
+        case "NEWEST":
+        default:
+          return completedAt;
+      }
+    }
+
     function renderArchive() {
       const list = document.getElementById("archiveList");
+      const filters = document.getElementById("archiveFilters");
       const searchInput = document.getElementById("archiveSearch");
 
-      setupArchiveControls();
+      setupArchiveDropdowns();
 
       if (searchInput && searchInput.value !== archiveSearch) {
         searchInput.value = archiveSearch;
+      }
+
+      if (filters) {
+        filters.innerHTML = "";
       }
 
       if (!state.archive.length) {
@@ -6361,19 +6421,44 @@ ${siteUrl}`;
       }
 
       const search = archiveSearch.trim().toLowerCase();
-      const filtered = sortCompletedItems(state.archive.filter(item => {
-        const matchesCategory = archiveFilter === "ALL" || item.name === archiveFilter;
-        const haystack = [
-          item.name,
-          item.completedName,
-          item.completedSummary,
-          item.completed_summary,
-          item.completedAt,
-          ...(item.progression || []).map(entry => entry.text || entry)
-        ].join(" ").toLowerCase();
-        const matchesSearch = !search || haystack.includes(search);
-        return matchesCategory && matchesSearch;
-      }));
+      const filtered = state.archive
+        .filter(item => {
+          const matchesCategory =
+            archiveCategoryFilter === "ALL" ||
+            String(item.name || "").toUpperCase() === archiveCategoryFilter;
+
+          const itemTags = [
+            ...(Array.isArray(item.completedTags) ? item.completedTags : []),
+            ...(Array.isArray(item.completed_tags) ? item.completed_tags : [])
+          ].map(tag => String(tag).toUpperCase());
+
+          const matchesVibe =
+            archiveVibeFilter === "ALL" ||
+            itemTags.includes(archiveVibeFilter);
+
+          const intensity =
+            String(item.completedIntensity || item.completed_intensity || "").toUpperCase();
+
+          const matchesIntensity =
+            archiveIntensityFilter === "ALL" ||
+            intensity === archiveIntensityFilter;
+
+          const haystack = [
+            item.name,
+            item.completedName,
+            item.completedSummary,
+            item.completedAt,
+            ...(item.progression || []).map(entry => entry.text || entry)
+          ].join(" ").toLowerCase();
+
+          const matchesSearch = !search || haystack.includes(search);
+
+          return matchesCategory && matchesVibe && matchesIntensity && matchesSearch;
+        })
+        .sort((a, b) => {
+          const sortMode = archiveSortMode || "NEWEST";
+          return getArchiveSortValue(b, sortMode) - getArchiveSortValue(a, sortMode);
+        });
 
       if (!filtered.length) {
         list.innerHTML = `<div class="empty">No completed categories match the current filter.</div>`;
@@ -8437,78 +8522,79 @@ box-shadow:0 0 18px rgba(255,255,255,0.06) !important;
 </style>
 
 
-<style id="v1-9-3-completed-search-category-sort-scroll">
-/* v1.9.3 — COMPLETED search + category dropdown + sort dropdown + scrollable library */
-#archiveView .panel{
-  height:calc(100vh - 150px) !important;
-  display:flex !important;
-  flex-direction:column !important;
-  overflow:hidden !important;
-}
-#archiveView .panel-title{flex-shrink:0 !important;}
-#archiveView .archive-controls{
-  flex-shrink:0 !important;
-  display:grid !important;
-  grid-template-columns:1fr !important;
-  gap:10px !important;
-  margin:0 0 18px 0 !important;
-  padding-bottom:10px !important;
-  background:var(--bg,#000000) !important;
-  z-index:3 !important;
-}
-body.light-mode #archiveView .archive-controls{background:#ffffff !important;}
-#archiveView .archive-select-row{
-  display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:10px !important;
-  width:100% !important;
-}
-#archiveView .archive-select-wrap{
-  display:grid !important;
-  gap:5px !important;
-  min-width:0 !important;
-}
-#archiveView .archive-select-wrap span{
-  color:var(--muted) !important;
-  font-size:10px !important;
-  font-weight:1000 !important;
-  letter-spacing:.08em !important;
-}
-#archiveView .archive-select{
-  width:100% !important;
-  height:40px !important;
-  border-radius:7px !important;
-  border:1px solid var(--line,#2f3336) !important;
-  background:transparent !important;
-  color:var(--text,#ffffff) !important;
-  font-size:12px !important;
-  font-weight:1000 !important;
-  letter-spacing:.04em !important;
-  padding:0 10px !important;
-  outline:none !important;
-}
-body.light-mode #archiveView .archive-select{
-  background:#ffffff !important;
-  color:#0f1419 !important;
-  border-color:#cfd9de !important;
-}
-#archiveView .archive-list{
-  flex:1 1 auto !important;
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
-  padding-right:4px !important;
-  padding-bottom:24px !important;
-  scrollbar-width:thin !important;
-  scrollbar-color:var(--line,#2f3336) transparent !important;
-}
-#archiveView .archive-list::-webkit-scrollbar{width:8px !important;}
-#archiveView .archive-list::-webkit-scrollbar-track{background:transparent !important;}
-#archiveView .archive-list::-webkit-scrollbar-thumb{background:var(--line,#2f3336) !important;border-radius:999px !important;}
-@media(max-width:520px){
-  #archiveView .panel{height:calc(100vh - 132px) !important;}
-  #archiveView .archive-select-row{grid-template-columns:1fr !important;gap:8px !important;}
-  #archiveView .archive-select{height:38px !important;font-size:11px !important;}
-}
+<style id="v1-9-3-completed-dropdown-sort-controls">
+  #archiveView .archive-dropdown-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  #archiveView .archive-select-wrap {
+    display: grid !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+  }
+
+  #archiveView .archive-select-wrap span {
+    color: var(--muted) !important;
+    font-size: 10px !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+  }
+
+  #archiveView .archive-select {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 7px !important;
+    border: 1px solid var(--line) !important;
+    background: transparent !important;
+    color: var(--text) !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    outline: none !important;
+  }
+
+  body.light-mode #archiveView .archive-select {
+    background: #ffffff !important;
+    color: #0f1419 !important;
+    border-color: #cfd9de !important;
+  }
+
+  #archiveView .panel {
+    max-height: calc(100vh - 150px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  #archiveView .archive-controls {
+    flex: 0 0 auto !important;
+  }
+
+  #archiveView .archive-list {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 4px !important;
+    padding-bottom: 22px !important;
+  }
+
+  @media (min-width: 760px) {
+    #archiveView .archive-dropdown-row {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 520px) {
+    #archiveView .panel {
+      max-height: calc(100vh - 132px) !important;
+    }
+  }
 </style>
 
 </body>
