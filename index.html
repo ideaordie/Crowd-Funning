@@ -6548,14 +6548,28 @@ ${siteUrl}`;
 
         const deepest = matching[0];
 
+        // Open one level shallower than the deepest active path so the user
+        // can still choose COMPLETE or continue the branch themselves.
+        const openItems =
+          deepest.items.length > 1
+            ? deepest.items.slice(0, deepest.items.length - 1)
+            : deepest.items;
+
         return {
           ...path,
           path_id: deepest.row.id,
-          path_items: deepest.items,
+          path_items: openItems,
           complete_votes: deepest.row.complete_votes || 0,
           new_path_votes: deepest.row.new_direction_votes || 0,
-          step_count: deepest.items.length,
-          current_node_id: deepest.row.current_node_id || null
+          step_count: openItems.length,
+          current_node_id:
+            openItems.length
+              ? (
+                  openItems[openItems.length - 1].nextNodeId ||
+                  openItems[openItems.length - 1].next_node_id ||
+                  null
+                )
+              : deepest.row.current_node_id || null
         };
       } catch (err) {
         console.warn("CROWD FUNNING: unexpected deepest active path lookup error:", err);
