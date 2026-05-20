@@ -7748,6 +7748,34 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-8-22-remove-completed-card-container">
+  /* Remove oversized gray outer container from completed cards */
+  #archiveView .archive-item {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 0 12px 0 !important;
+    box-shadow: none !important;
+  }
+
+  #archiveView .archive-summary {
+    border-radius: 22px !important;
+    border-width: 1px !important;
+    padding: 18px !important;
+    background:
+      radial-gradient(circle at top left, var(--accent-soft, rgba(255,255,255,0.08)), transparent 32%),
+      linear-gradient(180deg, rgba(12,12,16,0.98), rgba(4,4,6,1)) !important;
+  }
+
+  @media (max-width: 520px) {
+    #archiveView .archive-summary {
+      padding: 16px !important;
+      border-radius: 20px !important;
+    }
+  }
+</style>
+
 </body>
 </html>
 
