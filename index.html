@@ -8184,6 +8184,50 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-9-0-theme-responsive-trending-completed-cards">
+  /* v1.9.0 — Theme-responsive TRENDING and COMPLETED path cards */
+
+  body:not(.light-mode) #trendingView .archive-summary,
+  body:not(.light-mode) #archiveView .archive-summary {
+    background:
+      radial-gradient(circle at top left, var(--accent-soft, rgba(255,255,255,0.08)), transparent 34%),
+      linear-gradient(180deg, rgba(12,12,16,0.98), rgba(4,4,6,1)) !important;
+    border-color: var(--line, #2f3336) !important;
+    color: var(--text, #ffffff) !important;
+  }
+
+  body.light-mode #trendingView .archive-summary,
+  body.light-mode #archiveView .archive-summary {
+    background:
+      radial-gradient(circle at top left, var(--accent-soft, rgba(0,0,0,0.06)), transparent 34%),
+      linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,248,250,1)) !important;
+    border-color: #cfd9de !important;
+    color: #0f1419 !important;
+  }
+
+  body.light-mode #trendingView .archive-summary:hover,
+  body.light-mode #archiveView .archive-summary:hover {
+    border-color: var(--accent, #1d9bf0) !important;
+    box-shadow: 0 0 22px var(--accent-soft, rgba(29,155,240,0.16)) !important;
+  }
+
+  body.light-mode #trendingView .archive-entry-title,
+  body.light-mode #archiveView .archive-entry-title {
+    color: var(--accent, #1d9bf0) !important;
+  }
+
+  body.light-mode #trendingView .archive-entry-meta,
+  body.light-mode #archiveView .archive-entry-meta {
+    color: #536471 !important;
+  }
+
+  body:not(.light-mode) #trendingView .archive-entry-meta,
+  body:not(.light-mode) #archiveView .archive-entry-meta {
+    color: var(--muted, #a8a8b8) !important;
+  }
+</style>
+
 </body>
 </html>
 
