@@ -4618,7 +4618,13 @@
           return false;
         }
 
-        if (!Array.isArray(data) || !data.length) {
+        let liveRows = Array.isArray(data) ? data : [];
+
+        // Supabase active_entry_directions now excludes completed foundation branches.
+        // The frontend only limits visible card count.
+        liveRows = liveRows.slice(0, desiredDirectionType === "foundation" ? 3 : 2);
+
+        if (!liveRows.length) {
           console.warn("CROWD FUNNING: no live rows found for current lineage.", {
             categoryName,
             desiredDirectionType,
@@ -4627,7 +4633,7 @@
           return false;
         }
 
-        const first = data[0];
+        const first = liveRows[0];
 
         cat.liveEntry = {
           entryId: first.entry_id,
@@ -4638,7 +4644,7 @@
           nodeKey: first.node_key,
           currentNode: first.current_node,
           depth: first.depth,
-          directions: data.map(row => ({
+          directions: liveRows.map(row => ({
             id: row.direction_id,
             text: row.direction,
             up: Number(row.selection_count || row.score || 0),
@@ -4699,7 +4705,7 @@
 
         saveState();
 
-        console.log("CROWD FUNNING: lineage live rows rendered:", data.map(row => ({
+        console.log("CROWD FUNNING: lineage live rows rendered:", liveRows.map(row => ({
           direction: row.direction,
           node_key: row.node_key,
           option_key: row.option_key,
@@ -5127,6 +5133,16 @@
         return false;
       }
 
+      if (voteType === "complete") {
+        const { data: promotedCount, error: promoteError } = await crowdFunningSupabase.rpc("promote_completed_progression_paths");
+
+        if (promoteError) {
+          console.error("CROWD FUNNING: completed path auto-promotion failed:", promoteError);
+        } else {
+          console.log("CROWD FUNNING: completed path auto-promotion checked:", promotedCount);
+        }
+      }
+
       const { data: pathRows, error: pathError } = await crowdFunningSupabase
         .from("progression_paths")
         .select("complete_votes,new_direction_votes,status")
@@ -5137,13 +5153,20 @@
         cat.completeVotes = Number(pathRows[0].complete_votes || 0);
         cat.submitVotes = Number(pathRows[0].new_direction_votes || 0);
         cat.pathStatus = pathRows[0].status || "active";
+
+        if (cat.pathStatus === "complete") {
+          cat.completed = true;
+          cat.frontierOpen = false;
+          cat.options = [];
+        }
       }
 
       console.log("CROWD FUNNING: progression path vote recorded:", {
         pathId,
         voteType,
         completeVotes: cat.completeVotes || 0,
-        newDirectionVotes: cat.submitVotes || 0
+        newDirectionVotes: cat.submitVotes || 0,
+        pathStatus: cat.pathStatus || "active"
       });
 
       saveState();
@@ -5796,28 +5819,6 @@
       return true;
     }
 
-    async function markCurrentPathCompleted(cat) {
-      if (!cat || !cat.currentPathId) return false;
-
-      try {
-        const { error } = await crowdFunningSupabase
-          .from("progression_paths")
-          .update({ status: "completed" })
-          .eq("id", cat.currentPathId);
-
-        if (error) {
-          console.error("CROWD FUNNING: failed to mark path completed:", error);
-          return false;
-        }
-
-        cat.pathStatus = "completed";
-        return true;
-      } catch (err) {
-        console.error("CROWD FUNNING: unexpected completed-path update error:", err);
-        return false;
-      }
-    }
-
     async function completeCategory() {
       const cat = state.categories[state.activeCategory];
       if (!cat || cat.completed || cat.completeVoteSubmitted) return;
@@ -5857,8 +5858,6 @@
           renderAll();
           return;
         }
-
-        await markCurrentPathCompleted(cat);
 
         const completedName = generateCompletedName(cat.name, cat.progression);
 
@@ -6117,6 +6116,69 @@ ${siteUrl}`;
       completeMeter.textContent = (cat.completeVotes || 0).toLocaleString();
     }
 
+    async function loadCompletedArchiveFromSupabase() {
+      try {
+        const { data, error } = await crowdFunningSupabase
+          .from("completed_paths")
+          .select("path_id,category_slug,category_name,path_items,complete_votes,new_direction_votes,status,completed_at,completed_name")
+          .order("completed_at", { ascending: false })
+          .limit(100);
+
+        if (error) {
+          console.warn("CROWD FUNNING: completed archive load failed:", error);
+          return false;
+        }
+
+        if (!Array.isArray(data)) return false;
+
+        const remoteArchive = data.map(row => {
+          let items = row.path_items || [];
+
+          if (typeof items === "string") {
+            try {
+              items = JSON.parse(items);
+            } catch (_) {
+              items = [];
+            }
+          }
+
+          const progression = Array.isArray(items)
+            ? items.map(item => ({
+                text: item && item.text ? item.text : String(item || ""),
+                originator: item && item.originator ? item.originator : ""
+              })).filter(item => item.text)
+            : [];
+
+          const completeVotes = Number(row.complete_votes || 0);
+          const newPathVotes = Number(row.new_direction_votes || 0);
+          const totalVotes = completeVotes + newPathVotes;
+          const completionShare = totalVotes ? Math.round((completeVotes / totalVotes) * 100) : 0;
+          const categoryName = String(row.category_name || row.category_slug || "CATEGORY").toUpperCase();
+
+          return {
+            id: row.path_id,
+            name: categoryName,
+            completedName: row.completed_name || generateCompletedName(categoryName, progression),
+            completedAt: row.completed_at ? new Date(row.completed_at).toLocaleString() : "",
+            selections: totalVotes,
+            completionShare,
+            submissionCount: progression.length,
+            progression
+          };
+        });
+
+        const remoteIds = new Set(remoteArchive.map(item => item.id).filter(Boolean));
+        const localOnly = (state.archive || []).filter(item => !item.id || !remoteIds.has(item.id));
+
+        state.archive = [...remoteArchive, ...localOnly];
+        saveState();
+        return true;
+      } catch (err) {
+        console.warn("CROWD FUNNING: unexpected completed archive load error:", err);
+        return false;
+      }
+    }
+
     function renderArchive() {
       const list = document.getElementById("archiveList");
       const filters = document.getElementById("archiveFilters");
@@ -6126,12 +6188,15 @@ ${siteUrl}`;
         searchInput.value = archiveSearch;
       }
 
-      const categories = ["ALL", ...Object.keys(SEEDS)];
-      filters.innerHTML = categories.map(name => `
-        <button class="filter-chip ${archiveFilter === name ? "active" : ""}" data-filter="${name}" style="${name !== "ALL" ? `--accent:${COLORS[name][0]};--accent-soft:${COLORS[name][1]};` : ""}">
+      const categories = ["ALL", ...(state.categoryOrder || Object.keys(state.categories || SEEDS))];
+      filters.innerHTML = categories.map(name => {
+        const [accent, soft] = name !== "ALL" ? colorForCategory(name) : ["#ffffff", "rgba(255,255,255,0.14)"];
+        return `
+        <button class="filter-chip ${archiveFilter === name ? "active" : ""}" data-filter="${name}" style="${name !== "ALL" ? `--accent:${accent};--accent-soft:${soft};` : ""}">
           ${name}
         </button>
-      `).join("");
+      `;
+      }).join("");
 
       filters.querySelectorAll(".filter-chip").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -6168,7 +6233,7 @@ ${siteUrl}`;
       list.innerHTML = Object.keys(grouped).map(groupName => {
         const groupItems = grouped[groupName];
         return `
-          <div class="archive-group" style="--accent:${COLORS[groupName][0]};--accent-soft:${COLORS[groupName][1]};">
+          <div class="archive-group" style="--accent:${colorForCategory(groupName)[0]};--accent-soft:${colorForCategory(groupName)[1]};">
             <div class="archive-group-title">
               <span>${groupName}</span>
               <span class="archive-count-pill">${groupItems.length} completed</span>
@@ -6434,11 +6499,12 @@ ${siteUrl}`;
       renderTrending();
     }
 
-    function showArchive() {
+    async function showArchive() {
       document.getElementById("homeView").classList.add("hidden");
       document.getElementById("trendingView").classList.add("hidden");
       document.getElementById("aboutView").classList.add("hidden");
       document.getElementById("archiveView").classList.remove("hidden");
+      await loadCompletedArchiveFromSupabase();
       renderArchive();
     }
 
@@ -7460,6 +7526,35 @@ ${siteUrl}`;
   #categoryList,
   #categoryList .cat-card {
     pointer-events: auto !important;
+  }
+</style>
+
+
+<style id="v1-8-13-completed-layout-and-branch-filter">
+  /* COMPLETED page controls: search on its own row, category buttons below */
+  #archiveView .archive-controls {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  #archiveView .archive-search {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #archiveView .archive-filter-row {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  #archiveView .filter-chip {
+    flex: 0 0 auto !important;
   }
 </style>
 
