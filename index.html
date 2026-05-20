@@ -7841,6 +7841,35 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-8-28-completed-summary-text-clamp">
+  /* Completed summary text: cleaner mobile scaling */
+  #archiveView .archive-entry-title {
+    font-size: clamp(14px, 3.2vw, 16px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.015em !important;
+
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+
+    max-height: calc(1.12em * 2) !important;
+  }
+
+  @media (max-width: 520px) {
+    #archiveView .archive-entry-title {
+      font-size: clamp(13px, 4vw, 15px) !important;
+      line-height: 1.08 !important;
+      max-height: calc(1.08em * 2) !important;
+    }
+  }
+</style>
+
 </body>
 </html>
 
