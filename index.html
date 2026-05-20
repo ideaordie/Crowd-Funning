@@ -6525,9 +6525,20 @@ ${siteUrl}`;
 
       trendingPaths.forEach(path => {
         const categoryName = String(path.category_name || path.category_slug || "CATEGORY").trim().toUpperCase();
+        const completePct = Number(path.completion_percent || 0);
+        const pathStatus = String(path.status || path.path_status || "").toLowerCase();
+
+        // TRENDING should show only open, still-developing foundation branches.
+        // COMPLETED/threshold-met branches belong only on the COMPLETED page.
+        const isComplete =
+          pathStatus === "complete" ||
+          pathStatus === "completed" ||
+          completePct >= COMPLETION_THRESHOLD_PERCENT;
+
+        if (isComplete) return;
+
         if (!grouped.has(categoryName)) grouped.set(categoryName, []);
 
-        // Show active foundation branches only, grouped by category.
         if (grouped.get(categoryName).length < 3) {
           grouped.get(categoryName).push(path);
         }
@@ -8010,6 +8021,36 @@ ${siteUrl}`;
       font-size: clamp(13px, 4vw, 15px) !important;
       line-height: 1.08 !important;
       max-height: calc(1.08em * 2) !important;
+    }
+  }
+</style>
+
+
+<style id="v1-8-32-trending-open-only-alignment">
+  #trendingView .archive-summary.trending-summary {
+    min-height: 72px !important;
+    align-items: center !important;
+  }
+
+  #trendingView .archive-entry-title {
+    align-self: center !important;
+    margin: 0 !important;
+  }
+
+  #trendingView .archive-entry-meta {
+    align-self: center !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
+    height: 100% !important;
+  }
+
+  @media (max-width: 520px) {
+    #trendingView .archive-summary.trending-summary {
+      min-height: 68px !important;
+      grid-template-columns: 1fr 96px !important;
     }
   }
 </style>
