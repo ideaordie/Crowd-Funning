@@ -6398,6 +6398,7 @@ ${siteUrl}`;
 
         trendingPaths = (Array.isArray(data) ? data : []).map(row => ({
           path_id: `foundation-${row.direction_id}`,
+          foundation_direction_id: row.direction_id,
           category_slug: row.category_slug,
           category_name: row.category_label || row.category_slug,
           entry_id: row.entry_id,
@@ -6483,8 +6484,89 @@ ${siteUrl}`;
       })).filter(item => item.text);
     }
 
+    function getFirstPathDirectionId(items) {
+      if (!Array.isArray(items) || !items.length) return "";
+
+      const first = items[0] || {};
+
+      return String(
+        first.directionId ||
+        first.direction_id ||
+        first.liveDirectionId ||
+        first.live_direction_id ||
+        ""
+      ).trim();
+    }
+
+    async function resolveDeepestActivePathForFoundation(path) {
+      if (!path || !path.foundation_direction_id || !path.entry_id) {
+        return path;
+      }
+
+      try {
+        const foundationDirectionId = String(path.foundation_direction_id).trim();
+
+        const { data, error } = await crowdFunningSupabase
+          .from("progression_paths")
+          .select("id,entry_id,current_node_id,path_key,path_items,complete_votes,new_direction_votes,status,updated_at")
+          .eq("entry_id", path.entry_id)
+          .eq("status", "active")
+          .order("updated_at", { ascending: false })
+          .limit(250);
+
+        if (error || !Array.isArray(data) || !data.length) {
+          if (error) console.warn("CROWD FUNNING: deepest active path lookup failed:", error);
+          return path;
+        }
+
+        const matching = data
+          .map(row => {
+            let items = row.path_items || [];
+
+            if (typeof items === "string") {
+              try {
+                items = JSON.parse(items);
+              } catch (_) {
+                items = [];
+              }
+            }
+
+            return {
+              row,
+              items: Array.isArray(items) ? items : []
+            };
+          })
+          .filter(({ items }) => getFirstPathDirectionId(items) === foundationDirectionId)
+          .sort((a, b) => {
+            if (b.items.length !== a.items.length) return b.items.length - a.items.length;
+            return String(b.row.updated_at || "").localeCompare(String(a.row.updated_at || ""));
+          });
+
+        if (!matching.length) {
+          return path;
+        }
+
+        const deepest = matching[0];
+
+        return {
+          ...path,
+          path_id: deepest.row.id,
+          path_items: deepest.items,
+          complete_votes: deepest.row.complete_votes || 0,
+          new_path_votes: deepest.row.new_direction_votes || 0,
+          step_count: deepest.items.length,
+          current_node_id: deepest.row.current_node_id || null
+        };
+      } catch (err) {
+        console.warn("CROWD FUNNING: unexpected deepest active path lookup error:", err);
+        return path;
+      }
+    }
+
     async function continueTrendingPath(path) {
       if (!path) return;
+
+      path = await resolveDeepestActivePathForFoundation(path);
 
       const categoryName = String(path.category_name || path.category_slug || "JOKE").trim().toUpperCase();
 
@@ -6599,7 +6681,7 @@ ${siteUrl}`;
                 <div class="archive-item trending-archive-item">
                   <button class="archive-summary trending-summary" data-trending-index="${idx}" data-trending-group="${categoryName}">
                     <span class="archive-entry-title">${foundationText}</span>
-                    <span class="archive-entry-meta">ACTIVE • SCORE ${score}</span>
+                    <span class="archive-entry-meta">OPEN LATEST • SCORE ${score}</span>
                   </button>
                 </div>
               `;
