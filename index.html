@@ -5217,11 +5217,20 @@
           return;
         }
 
+        const visibleOptions = cat.phase === "foundation_select"
+          ? cat.options.slice(0, 3)
+          : cat.options.slice(0, 2);
+
+        const visibleDirectionIds = visibleOptions
+          .map(opt => opt.liveDirectionId)
+          .filter(Boolean);
+
         const { error: voteError } = await crowdFunningSupabase.rpc("select_direction", {
           p_user_id: userId,
           p_entry_id: cat.liveEntry.entryId,
           p_parent_node_id: cat.liveEntry.nodeId,
-          p_selected_direction_id: selected.liveDirectionId
+          p_selected_direction_id: selected.liveDirectionId,
+          p_visible_direction_ids: visibleDirectionIds
         });
 
         if (voteError) {
