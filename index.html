@@ -8228,6 +8228,33 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-9-1-flat-trending-completed-cards">
+body:not(.light-mode) #trendingView .archive-summary,
+body:not(.light-mode) #archiveView .archive-summary{
+background:#050608 !important;
+border-color:var(--line,#2f3336) !important;
+}
+
+body.light-mode #trendingView .archive-summary,
+body.light-mode #archiveView .archive-summary{
+background:#ffffff !important;
+border-color:#cfd9de !important;
+}
+
+body.light-mode #trendingView .archive-summary:hover,
+body.light-mode #archiveView .archive-summary:hover{
+border-color:var(--accent,#1d9bf0) !important;
+box-shadow:0 0 18px rgba(0,0,0,0.06) !important;
+}
+
+body:not(.light-mode) #trendingView .archive-summary:hover,
+body:not(.light-mode) #archiveView .archive-summary:hover{
+border-color:var(--accent,#ffffff) !important;
+box-shadow:0 0 18px rgba(255,255,255,0.06) !important;
+}
+</style>
+
 </body>
 </html>
 
