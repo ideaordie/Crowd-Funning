@@ -7790,6 +7790,24 @@ ${siteUrl}`;
   }
 </style>
 
+
+<style id="v1-8-24-completed-card-square-radius-match">
+  /* Match completed path card corners to the app's standard button/panel radius */
+  #archiveView .archive-summary,
+  #archiveView .archive-item .archive-summary,
+  body.light-mode #archiveView .archive-summary,
+  body:not(.light-mode) #archiveView .archive-summary {
+    border-radius: 7px !important;
+  }
+
+  @media (max-width: 520px) {
+    #archiveView .archive-summary,
+    #archiveView .archive-item .archive-summary {
+      border-radius: 7px !important;
+    }
+  }
+</style>
+
 </body>
 </html>
 
