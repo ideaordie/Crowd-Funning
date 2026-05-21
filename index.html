@@ -3847,6 +3847,30 @@ radial-gradient(circle at 86% 8%,rgba(0,170,255,.10),transparent 32%),
 }
 </style>
 
+
+<style id="v1-9-8-remove-light-mode-white-underlay">
+/* v1.9.8 — remove the LIGHT-mode white page underlay so the
+   existing cinematic glow background remains visible */
+
+body.light-mode,
+body.light-mode .app,
+body.light-mode .app-shell,
+body.light-mode .main-shell,
+body.light-mode .content-shell{
+  background:transparent !important;
+}
+
+body.light-mode::before{
+  opacity:1 !important;
+}
+
+body.light-mode .panel,
+body.light-mode .view,
+body.light-mode .section-panel{
+  backdrop-filter:blur(18px) !important;
+}
+</style>
+
 </head>
 <body class="neutral-accent">
   <main class="app">
