@@ -3741,6 +3741,91 @@
     }
 
 </style>
+
+<style id="v1-9-5-guided-glow-ui-effects">
+/* v1.9.5 — cinematic guided glow effects inspired by invite onboarding */
+.guided-glow-target{
+  position:relative!important;
+  overflow:hidden!important;
+  border-color:rgba(52,233,255,.48)!important;
+  box-shadow:
+    0 0 18px rgba(52,233,255,.18),
+    0 0 42px rgba(255,61,242,.12)!important;
+  animation:guidedPulse 2.8s ease-in-out infinite!important;
+}
+
+.guided-glow-target::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:inherit;
+  background:linear-gradient(90deg,transparent,rgba(52,233,255,.20),rgba(255,61,242,.16),transparent);
+  transform:translateX(-120%);
+  animation:guidedSweep 3.2s linear infinite!important;
+  pointer-events:none;
+  z-index:1;
+}
+
+.guided-glow-target > *{
+  position:relative;
+  z-index:2;
+}
+
+#categoryPanel.guided-glow-target,
+#foundationBox.guided-glow-target,
+#progressionPreviewPanel.guided-glow-target{
+  border-color:rgba(52,233,255,.48)!important;
+}
+
+#options.guided-glow-target{
+  border-radius:18px!important;
+  padding:2px!important;
+}
+
+#options.guided-glow-target::before{
+  border-radius:18px!important;
+}
+
+.option-card.guided-card-glow{
+  border-color:rgba(52,233,255,.48)!important;
+  box-shadow:
+    0 0 16px rgba(52,233,255,.16),
+    0 0 34px rgba(255,61,242,.10)!important;
+  animation:guidedCardPulse 2.8s ease-in-out infinite!important;
+}
+
+body.light-mode .guided-glow-target,
+body.light-mode .option-card.guided-card-glow{
+  border-color:rgba(29,155,240,.56)!important;
+  box-shadow:
+    0 0 16px rgba(29,155,240,.16),
+    0 0 34px rgba(255,61,242,.08)!important;
+}
+
+@keyframes guidedPulse{
+  0%,100%{filter:brightness(1);transform:scale(1)}
+  50%{filter:brightness(1.08);transform:scale(1.006)}
+}
+
+@keyframes guidedCardPulse{
+  0%,100%{filter:brightness(1);transform:translateY(0)}
+  50%{filter:brightness(1.08);transform:translateY(-1px)}
+}
+
+@keyframes guidedSweep{
+  from{transform:translateX(-120%)}
+  to{transform:translateX(120%)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .guided-glow-target,
+  .guided-glow-target::before,
+  .option-card.guided-card-glow{
+    animation:none!important;
+  }
+}
+</style>
+
 </head>
 <body class="neutral-accent">
   <main class="app">
@@ -5508,6 +5593,7 @@
         handleInput.value = "";
         resetNotificationRequest("foundation");
         updateCharCounters();
+      if (window.applyCrowdFunningGuidedGlow) setTimeout(window.applyCrowdFunningGuidedGlow, 0);
         saveState();
         renderAll();
 
@@ -8719,6 +8805,66 @@ box-shadow:0 0 18px rgba(255,255,255,0.06) !important;
     }
   }
 </style>
+
+
+<script id="v1-9-5-guided-glow-controller">
+(function(){
+  function clearGuidedGlow(){
+    document.querySelectorAll('.guided-glow-target').forEach(el=>el.classList.remove('guided-glow-target'));
+    document.querySelectorAll('.guided-card-glow').forEach(el=>el.classList.remove('guided-card-glow'));
+  }
+
+  function isVisible(el){
+    if(!el) return false;
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+  }
+
+  window.applyCrowdFunningGuidedGlow = function applyCrowdFunningGuidedGlow(){
+    clearGuidedGlow();
+
+    const categoryPanel = document.getElementById('categoryPanel');
+    const foundationPanel = document.getElementById('foundationBox');
+    const optionsPanel = document.getElementById('options');
+    const previewPanel = document.getElementById('progressionPreviewPanel');
+
+    const appState = window.state || null;
+    const activeCategory = appState && appState.activeCategory;
+    const cat = activeCategory && appState.categories ? appState.categories[activeCategory] : null;
+
+    if(!activeCategory){
+      if(categoryPanel) categoryPanel.classList.add('guided-glow-target');
+      return;
+    }
+
+    const progressionLength = cat && Array.isArray(cat.progression) ? cat.progression.length : 0;
+    const optionCards = optionsPanel ? Array.from(optionsPanel.querySelectorAll('.option-card')) : [];
+    const visibleOptionCards = optionCards.filter(isVisible);
+    const foundationVisible = foundationPanel && isVisible(foundationPanel) && foundationPanel.classList.contains('show');
+
+    if(foundationVisible || (cat && cat.phase === 'foundation_submit')){
+      if(foundationPanel) foundationPanel.classList.add('guided-glow-target');
+      return;
+    }
+
+    if(visibleOptionCards.length){
+      if(optionsPanel) optionsPanel.classList.add('guided-glow-target');
+      visibleOptionCards.forEach(card=>card.classList.add('guided-card-glow'));
+      return;
+    }
+
+    if(progressionLength > 0 && previewPanel){
+      previewPanel.classList.add('guided-glow-target');
+    }
+  };
+
+  const run = () => window.applyCrowdFunningGuidedGlow && window.applyCrowdFunningGuidedGlow();
+  window.addEventListener('load',()=>setTimeout(run,250));
+  document.addEventListener('click',()=>setTimeout(run,120),true);
+  setInterval(run,900);
+})();
+</script>
 
 </body>
 </html>
